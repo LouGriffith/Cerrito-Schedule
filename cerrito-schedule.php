@@ -3,7 +3,7 @@
  * Plugin Name: Cerrito Schedule Display
  * Plugin URI: https://cerritoentertainment.com
  * Description: Schedule shortcode for displaying events (works with ACF)
- * Version: 5.9
+ * Version: 6.0
  * Author: Cerrito Entertainment
  * Author URI: https://cerritoentertainment.com
  */
@@ -2698,7 +2698,7 @@ function cerrito_upcoming_themes_list_shortcode($atts) {
         display: grid;
         grid-template-columns: 120px 1fr;
         gap: 15px;
-        margin-bottom: 15px;
+        margin-bottom: 25px;
         align-items: start;
     }
     
@@ -2714,7 +2714,7 @@ function cerrito_upcoming_themes_list_shortcode($atts) {
         font-size: 0.75em;
         font-weight: 700;
         text-transform: uppercase;
-        margin: 0;
+        margin: 0 0 8px 0;
         line-height: 1.2;
     }
     
@@ -2763,31 +2763,35 @@ function cerrito_upcoming_themes_list_shortcode($atts) {
         color: #333;
         font-size: 1em;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin: 0;
+        margin: 0 0 4px 0;
         line-height: 1.2;
+        gap: 4px;
     }
     
-    .cerrito-themes-location a {
+    .cerrito-themes-location-name {
+        margin-left: auto;
+        text-align: right;
+    }
+    
+    .cerrito-themes-location-name a {
         color: #333;
         text-decoration: none;
         font-weight: 400;
     }
     
-    .cerrito-themes-location a:hover {
+    .cerrito-themes-location-name a:hover {
         color: #2563eb;
     }
     
-    .cerrito-themes-time {
-        margin-left: auto;
-        font-weight: 400;
-        white-space: nowrap;
+    .cerrito-themes-arrow {
+        color: #666;
+        flex-shrink: 0;
     }
     
-    .cerrito-themes-arrow {
-        margin: 0 8px;
-        color: #666;
+    .cerrito-themes-time {
+        font-weight: 400;
+        flex-shrink: 0;
     }
     
     .cerrito-themes-empty {
@@ -2988,14 +2992,14 @@ function cerrito_upcoming_themes_list_shortcode($atts) {
                             <div class="cerrito-themes-locations">
                                 <?php foreach ($locations_times as $location): ?>
                                     <div class="cerrito-themes-location">
-                                        <a href="<?php echo esc_url($location['url']); ?>">
-                                            <?php echo esc_html(trim($location['name'])); ?>
-                                        </a>
+                                        <div class="cerrito-themes-location-name">
+                                            <a href="<?php echo esc_url($location['url']); ?>">
+                                                <?php echo esc_html(trim($location['name'])); ?>
+                                            </a>
+                                        </div>
                                         <?php if ($location['time']): ?>
-                                            <span class="cerrito-themes-time">
-                                                <span class="cerrito-themes-arrow">→</span>
-                                                <?php echo esc_html($location['time']); ?>
-                                            </span>
+                                            <span class="cerrito-themes-arrow">→</span>
+                                            <span class="cerrito-themes-time"><?php echo esc_html($location['time']); ?></span>
                                         <?php endif; ?>
                                     </div>
                                 <?php endforeach; ?>
