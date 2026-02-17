@@ -3,7 +3,7 @@
  * Plugin Name: Cerrito Schedule Display
  * Plugin URI: https://cerritoentertainment.com
  * Description: Schedule shortcode for displaying events (works with ACF)
- * Version: 4.5
+ * Version: 5.9
  * Author: Cerrito Entertainment
  * Author URI: https://cerritoentertainment.com
  */
@@ -11,6 +11,47 @@
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
     exit;
+}
+
+// ===============================================
+// HELPER FUNCTION - GET ACTIVE THEME
+// ===============================================
+
+/**
+ * Get the active theme for a game type on a specific date
+ * Integrates with cerrito-themed-dates plugin if available
+ * Returns full theme term object with emoji and image fields from game_theme taxonomy
+ * 
+ * @param int $term_id Game type term ID
+ * @param string $date Date in Y-m-d format (optional, defaults to today)
+ * @return WP_Term|false Theme term object or false if no theme active
+ */
+function cerrito_get_event_theme($term_id, $date = null) {
+    if ($date === null) {
+        $date = date('Y-m-d');
+    }
+    
+    // Check if themed dates plugin is active
+    $themed_dates = get_term_meta($term_id, 'themed_dates', true);
+    
+    if (!empty($themed_dates) && is_array($themed_dates)) {
+        foreach ($themed_dates as $themed_date) {
+            if ($themed_date['date'] === $date) {
+                // Get theme from game_theme taxonomy
+                if (isset($themed_date['theme_id'])) {
+                    $theme = get_term($themed_date['theme_id'], 'game-theme');
+                    if ($theme && !is_wp_error($theme)) {
+                        // Attach ACF fields for easy access
+                        $theme->emoji = get_field('theme_emoji', 'game-theme_' . $theme->term_id);
+                        $theme->image = get_field('theme_image', 'game-theme_' . $theme->term_id);
+                        return $theme;
+                    }
+                }
+            }
+        }
+    }
+    
+    return false;
 }
 
 // ===============================================
@@ -277,8 +318,16 @@ function cerrito_schedule_shortcode($atts) {
                     $event_type = implode(', ', $type_names);
                 }
                 
-                // Get special theme
+                // Get special theme - check event field first, then themed dates
                 $special_theme = get_field('special_theme', $event->ID);
+                
+                // If no manual theme, check for automatic themed date
+                if (empty($special_theme) && $types && !is_wp_error($types) && $event_date) {
+                    $auto_theme = cerrito_get_event_theme($types[0]->term_id, $event_date);
+                    if ($auto_theme) {
+                        $special_theme = $auto_theme->name; // Use theme name
+                    }
+                }
                 
                 // Create a key for grouping (type + theme)
                 $group_key = $event_type . ($special_theme ? ' - ' . $special_theme : '');
@@ -694,7 +743,41 @@ function cerrito_recurring_schedule_shortcode($atts) {
                             }
                         }
                         
+                        // Get special theme - check event field first
                         $special_theme = get_field('special_theme', $event->ID);
+                        
+                        // If no manual theme, check for upcoming themed dates
+                        if (empty($special_theme) && $types && !is_wp_error($types)) {
+                            $start_check = date('Y-m-d');
+                            $end_check = date('Y-m-d', strtotime('+60 days')); // Check 60 days ahead
+                            
+                            // Get all themed dates for this game type
+                            $themed_dates = get_term_meta($types[0]->term_id, 'themed_dates', true);
+                            
+                            if (!empty($themed_dates) && is_array($themed_dates)) {
+                                foreach ($themed_dates as $themed_date) {
+                                    if (!is_array($themed_date) || !isset($themed_date['date'])) {
+                                        continue;
+                                    }
+                                    
+                                    // Check if this themed date is in our range
+                                    if ($themed_date['date'] >= $start_check && $themed_date['date'] <= $end_check) {
+                                        // Check if this themed date's day matches this recurring event's day
+                                        $theme_date_obj = DateTime::createFromFormat('Y-m-d', $themed_date['date']);
+                                        if ($theme_date_obj && $theme_date_obj->format('l') === $day) {
+                                            // Found a theme for this recurring event!
+                                            if (isset($themed_date['theme_id']) && !empty($themed_date['theme_id'])) {
+                                                $theme = get_term($themed_date['theme_id'], 'game-theme');
+                                                if ($theme && !is_wp_error($theme)) {
+                                                    $special_theme = $theme->name . ' (' . $theme_date_obj->format('M j') . ')';
+                                                    break; // Use the first upcoming theme
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         $group_key = $event_type . ($special_theme ? ' - ' . $special_theme : '');
                         
                         if (!isset($events_by_day[$day][$group_key])) {
@@ -1076,6 +1159,37 @@ function cerrito_master_schedule_shortcode($atts) {
         line-height: 1.5;
     }
     
+    .cerrito-master-theme-display {
+        margin-top: 10px;
+        padding: 10px 15px;
+        background: #f0f0f0;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .cerrito-master-theme-emoji {
+        font-size: 2em;
+        line-height: 1;
+    }
+    
+    .cerrito-master-theme-image {
+        flex-shrink: 0;
+    }
+    
+    .cerrito-master-theme-image img {
+        max-width: 60px;
+        height: auto;
+        border-radius: 4px;
+    }
+    
+    .cerrito-master-theme-name {
+        flex: 1;
+        font-weight: 600;
+        color: #e91e63;
+    }
+    
     .cerrito-master-emoji {
         font-size: 1.3em;
         margin-right: 8px;
@@ -1322,6 +1436,40 @@ function cerrito_master_schedule_shortcode($atts) {
                 }
                 
                 $special_theme = get_field('special_theme', $event->ID);
+                
+                // For recurring events, check for upcoming themed dates within the range
+                if (empty($special_theme) && $is_recurring && $types && !is_wp_error($types)) {
+                    $start_check = date('Y-m-d');
+                    $end_check = date('Y-m-d', strtotime('+' . $atts['days_ahead'] . ' days'));
+                    
+                    // Get all themed dates for this game type
+                    $themed_dates = get_term_meta($types[0]->term_id, 'themed_dates', true);
+                    
+                    if (!empty($themed_dates) && is_array($themed_dates)) {
+                        foreach ($themed_dates as $themed_date) {
+                            if (!is_array($themed_date) || !isset($themed_date['date'])) {
+                                continue;
+                            }
+                            
+                            // Check if this themed date is in our range
+                            if ($themed_date['date'] >= $start_check && $themed_date['date'] <= $end_check) {
+                                // Check if this themed date's day matches this recurring event's day
+                                $theme_date_obj = DateTime::createFromFormat('Y-m-d', $themed_date['date']);
+                                if ($theme_date_obj && $theme_date_obj->format('l') === $day) {
+                                    // Found a theme for this recurring event on this day!
+                                    if (isset($themed_date['theme_id']) && !empty($themed_date['theme_id'])) {
+                                        $theme = get_term($themed_date['theme_id'], 'game-theme');
+                                        if ($theme && !is_wp_error($theme)) {
+                                            $special_theme = $theme->name . ' (' . $theme_date_obj->format('M j') . ')';
+                                            break; // Use the first upcoming theme
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 $group_key = $event_type . ($special_theme ? ' - ' . $special_theme : '');
                 
                 $event_data = array(
@@ -1448,6 +1596,33 @@ function cerrito_render_event_group($group, $is_recurring, $show_game_logo = 'no
             }
         }
     }
+    
+    // Get theme emoji and image if there's a theme
+    $theme_emoji = '';
+    $theme_image = '';
+    if ($group['theme']) {
+        // Extract theme name without date if it has (Feb 19) format
+        $theme_name = preg_replace('/\s*\([^)]*\)$/', '', $group['theme']);
+        
+        // Find the theme term
+        $theme_term = get_term_by('name', $theme_name, 'game-theme');
+        if (!$theme_term) {
+            $theme_term = get_term_by('slug', sanitize_title($theme_name), 'game-theme');
+        }
+        
+        if ($theme_term && !is_wp_error($theme_term)) {
+            $theme_emoji = get_field('theme_emoji', 'game-theme_' . $theme_term->term_id);
+            
+            $theme_image_field = get_field('theme_image', 'game-theme_' . $theme_term->term_id);
+            if (is_array($theme_image_field)) {
+                $theme_image = isset($theme_image_field['url']) ? $theme_image_field['url'] : '';
+            } elseif (is_numeric($theme_image_field)) {
+                $theme_image = wp_get_attachment_url($theme_image_field);
+            } elseif (is_string($theme_image_field) && !empty($theme_image_field)) {
+                $theme_image = $theme_image_field;
+            }
+        }
+    }
     ?>
     
     <div class="cerrito-master-occurrence">
@@ -1466,7 +1641,7 @@ function cerrito_render_event_group($group, $is_recurring, $show_game_logo = 'no
                         <?php endif; ?>
                         <?php echo esc_html($group['type']); ?>
                         <?php if ($group['theme']): ?>
-                            <span class="cerrito-master-theme"><?php echo esc_html($group['theme']); ?></span>
+                            <span class="cerrito-master-theme">Theme Rounds</span>
                         <?php endif; ?>
                         <?php if (!$is_recurring && isset($group['show_date'])): ?>
                             <span class="cerrito-master-date"><?php echo esc_html($group['show_date']); ?></span>
@@ -1478,6 +1653,18 @@ function cerrito_render_event_group($group, $is_recurring, $show_game_logo = 'no
                             <?php echo esc_html($game_description); ?>
                         </div>
                     <?php endif; ?>
+                    
+                    <?php if ($group['theme'] && $theme_emoji): ?>
+                        <div class="cerrito-master-theme-display">
+                            <div class="cerrito-master-theme-emoji">
+                                <?php echo esc_html($theme_emoji); ?>
+                            </div>
+                            
+                            <div class="cerrito-master-theme-name">
+                                <?php echo esc_html($group['theme']); ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php else: ?>
@@ -1487,12 +1674,24 @@ function cerrito_render_event_group($group, $is_recurring, $show_game_logo = 'no
                 <?php endif; ?>
                 <?php echo esc_html($group['type']); ?>
                 <?php if ($group['theme']): ?>
-                    <span class="cerrito-master-theme"><?php echo esc_html($group['theme']); ?></span>
+                    <span class="cerrito-master-theme">Theme Rounds</span>
                 <?php endif; ?>
                 <?php if (!$is_recurring && isset($group['show_date'])): ?>
                     <span class="cerrito-master-date"><?php echo esc_html($group['show_date']); ?></span>
                 <?php endif; ?>
             </div>
+            
+            <?php if ($group['theme'] && $theme_emoji): ?>
+                <div class="cerrito-master-theme-display">
+                    <div class="cerrito-master-theme-emoji">
+                        <?php echo esc_html($theme_emoji); ?>
+                    </div>
+                    
+                    <div class="cerrito-master-theme-name">
+                        <?php echo esc_html($group['theme']); ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
         
         <?php foreach ($group['events'] as $event): 
@@ -2297,6 +2496,67 @@ function cerrito_themed_rounds_shortcode($atts) {
         
         $events = get_posts($query_args);
         
+        // Also get events that might have automatic themed dates (no manual theme)
+        $query_args_no_theme = array(
+            'post_type' => 'event',
+            'posts_per_page' => -1,
+            'meta_key' => 'event_date',
+            'orderby' => 'meta_value',
+            'order' => 'ASC',
+            'meta_query' => array(
+                array(
+                    'key' => 'event_date',
+                    'value' => array($today, $end_date),
+                    'compare' => 'BETWEEN',
+                    'type' => 'DATE'
+                )
+            )
+        );
+        
+        $all_events = get_posts($query_args_no_theme);
+        
+        // Combine and filter
+        $themed_events = array();
+        $seen_ids = array();
+        
+        foreach ($events as $event) {
+            $themed_events[] = $event;
+            $seen_ids[] = $event->ID;
+        }
+        
+        // Check other events for automatic themes
+        foreach ($all_events as $event) {
+            if (in_array($event->ID, $seen_ids)) {
+                continue;
+            }
+            
+            $event_date = get_field('event_date', $event->ID);
+            
+            // Handle date formats
+            if ($event_date && strlen($event_date) === 8 && is_numeric($event_date)) {
+                $year = substr($event_date, 0, 4);
+                $month = substr($event_date, 4, 2);
+                $day = substr($event_date, 6, 2);
+                $event_date = "$year-$month-$day";
+            } elseif ($event_date && strpos($event_date, '/') !== false) {
+                $date_obj = DateTime::createFromFormat('m/d/Y', $event_date);
+                if ($date_obj) {
+                    $event_date = $date_obj->format('Y-m-d');
+                }
+            }
+            
+            // Check for automatic theme
+            $types = get_the_terms($event->ID, 'game_type');
+            if ($types && !is_wp_error($types) && $event_date) {
+                $auto_theme = cerrito_get_event_theme($types[0]->term_id, $event_date);
+                if ($auto_theme) {
+                    $themed_events[] = $event;
+                }
+            }
+        }
+        
+        $events = $themed_events;
+        
         // Filter by game type if specified
         if (!empty($atts['game_type']) && $events) {
             $events = array_filter($events, function($event) use ($atts) {
@@ -2320,11 +2580,7 @@ function cerrito_themed_rounds_shortcode($atts) {
                 $event_date = get_field('event_date', $event->ID);
                 $special_theme = get_field('special_theme', $event->ID);
                 
-                if (!$special_theme) {
-                    continue;
-                }
-                
-                // Handle date formats
+                // Handle date formats first
                 if ($event_date && strlen($event_date) === 8 && is_numeric($event_date)) {
                     $year = substr($event_date, 0, 4);
                     $month = substr($event_date, 4, 2);
@@ -2335,6 +2591,21 @@ function cerrito_themed_rounds_shortcode($atts) {
                     if ($date_obj) {
                         $event_date = $date_obj->format('Y-m-d');
                     }
+                }
+                
+                // If no manual theme, check for automatic themed date
+                if (empty($special_theme) && $event_date) {
+                    $types = get_the_terms($event->ID, 'game_type');
+                    if ($types && !is_wp_error($types)) {
+                        $auto_theme = cerrito_get_event_theme($types[0]->term_id, $event_date);
+                        if ($auto_theme) {
+                            $special_theme = $auto_theme->name; // Use theme name
+                        }
+                    }
+                }
+                
+                if (!$special_theme) {
+                    continue;
                 }
                 
                 if (!$event_date) {
@@ -2402,3 +2673,350 @@ function cerrito_themed_rounds_shortcode($atts) {
     return ob_get_clean();
 }
 add_shortcode('cerrito_themed_rounds', 'cerrito_themed_rounds_shortcode');
+
+// ===============================================
+// UPCOMING THEMES LIST SHORTCODE
+// ===============================================
+
+function cerrito_upcoming_themes_list_shortcode($atts) {
+    $atts = shortcode_atts(array(
+        'days_ahead' => '90',
+        'game_type' => '', // Optional filter
+    ), $atts);
+    
+    ob_start();
+    
+    ?>
+    
+    <style>
+    .cerrito-themes-list {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .cerrito-themes-list-item {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 15px;
+        margin-bottom: 15px;
+        align-items: start;
+    }
+    
+    .cerrito-themes-date-box {
+        background: #2563eb;
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .cerrito-themes-day {
+        font-size: 0.75em;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin: 0;
+        line-height: 1.2;
+    }
+    
+    .cerrito-themes-date {
+        font-size: 1.8em;
+        font-weight: bold;
+        line-height: 1;
+        margin: 0;
+    }
+    
+    .cerrito-themes-info-box {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        line-height: 0.25em;
+    }
+    
+    .cerrito-themes-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 10px 0;
+    }
+    
+    .cerrito-themes-emoji {
+        font-size: 2em;
+        line-height: 1;
+    }
+    
+    .cerrito-themes-name {
+        font-size: 1.5em;
+        font-weight: 700;
+        color: #2563eb;
+        text-transform: uppercase;
+        margin: 0;
+        line-height: 1;
+    }
+    
+    .cerrito-themes-locations {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .cerrito-themes-location {
+        padding: 0;
+        color: #333;
+        font-size: 1em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 0;
+        line-height: 1.2;
+    }
+    
+    .cerrito-themes-location a {
+        color: #333;
+        text-decoration: none;
+        font-weight: 400;
+    }
+    
+    .cerrito-themes-location a:hover {
+        color: #2563eb;
+    }
+    
+    .cerrito-themes-time {
+        margin-left: auto;
+        font-weight: 400;
+        white-space: nowrap;
+    }
+    
+    .cerrito-themes-arrow {
+        margin: 0 8px;
+        color: #666;
+    }
+    
+    .cerrito-themes-empty {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    @media (max-width: 600px) {
+        .cerrito-themes-list-item {
+            grid-template-columns: 90px 1fr;
+            gap: 12px;
+        }
+        
+        .cerrito-themes-date {
+            font-size: 1.5em;
+        }
+        
+        .cerrito-themes-name {
+            font-size: 1.2em;
+        }
+        
+        .cerrito-themes-location {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .cerrito-themes-time {
+            margin-left: 0;
+        }
+    }
+    </style>
+    
+    <div class="cerrito-themes-list">
+        
+        <?php
+        // Get current date range
+        $today = date('Y-m-d');
+        $end_date = date('Y-m-d', strtotime('+' . $atts['days_ahead'] . ' days'));
+        
+        // Get all game types
+        $game_types_args = array(
+            'taxonomy' => 'game_type',
+            'hide_empty' => false,
+        );
+        
+        if (!empty($atts['game_type'])) {
+            $game_types_args['slug'] = $atts['game_type'];
+        }
+        
+        $game_types = get_terms($game_types_args);
+        
+        // Collect all themed dates
+        $themed_dates_list = array();
+        
+        foreach ($game_types as $game_type) {
+            $themed_dates = get_term_meta($game_type->term_id, 'themed_dates', true);
+            
+            if (!empty($themed_dates) && is_array($themed_dates)) {
+                foreach ($themed_dates as $themed_date) {
+                    if (!is_array($themed_date) || !isset($themed_date['date']) || !isset($themed_date['theme_id'])) {
+                        continue;
+                    }
+                    
+                    // Check if in date range
+                    if ($themed_date['date'] >= $today && $themed_date['date'] <= $end_date) {
+                        $theme = get_term($themed_date['theme_id'], 'game-theme');
+                        if ($theme && !is_wp_error($theme)) {
+                            $theme_key = $themed_date['date'] . '_' . $themed_date['theme_id'];
+                            
+                            if (!isset($themed_dates_list[$theme_key])) {
+                                $themed_dates_list[$theme_key] = array(
+                                    'date' => $themed_date['date'],
+                                    'theme' => $theme,
+                                    'game_types' => array()
+                                );
+                            }
+                            
+                            $themed_dates_list[$theme_key]['game_types'][] = $game_type;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Sort by date
+        usort($themed_dates_list, function($a, $b) {
+            return strcmp($a['date'], $b['date']);
+        });
+        
+        if (!empty($themed_dates_list)) {
+            foreach ($themed_dates_list as $item) {
+                $date_obj = DateTime::createFromFormat('Y-m-d', $item['date']);
+                $day_name = strtoupper(substr($date_obj->format('l'), 0, 3)); // WED, THU
+                if ($date_obj->format('l') === 'Thursday' || $date_obj->format('l') === 'Tuesday') {
+                    $day_name = strtoupper($date_obj->format('l')); // Full name for Thursday/Tuesday
+                }
+                $date_num = $date_obj->format('n/j'); // 2/11
+                
+                $theme = $item['theme'];
+                $theme_emoji = get_field('theme_emoji', 'game-theme_' . $theme->term_id);
+                
+                // Get all events for these game types on this date
+                $locations_times = array();
+                
+                foreach ($item['game_types'] as $game_type) {
+                    // Get all events of this game type
+                    $events_query = array(
+                        'post_type' => 'event',
+                        'posts_per_page' => -1,
+                        'tax_query' => array(
+                            array(
+                                'taxonomy' => 'game_type',
+                                'field' => 'term_id',
+                                'terms' => $game_type->term_id
+                            )
+                        )
+                    );
+                    
+                    $events = get_posts($events_query);
+                    
+                    foreach ($events as $event) {
+                        $is_recurring = get_field('is_recurring', $event->ID);
+                        $event_date = get_field('event_date', $event->ID);
+                        
+                        // Check if this event happens on this date
+                        $matches_date = false;
+                        
+                        if ($is_recurring) {
+                            // Check if day of week matches
+                            $when_terms = get_the_terms($event->ID, 'when');
+                            if ($when_terms && !is_wp_error($when_terms)) {
+                                foreach ($when_terms as $when_term) {
+                                    if ($when_term->name === $date_obj->format('l')) {
+                                        $matches_date = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        } else {
+                            // Handle date formats
+                            if ($event_date && strlen($event_date) === 8 && is_numeric($event_date)) {
+                                $year = substr($event_date, 0, 4);
+                                $month = substr($event_date, 4, 2);
+                                $day = substr($event_date, 6, 2);
+                                $event_date = "$year-$month-$day";
+                            } elseif ($event_date && strpos($event_date, '/') !== false) {
+                                $date_obj_temp = DateTime::createFromFormat('m/d/Y', $event_date);
+                                if ($date_obj_temp) {
+                                    $event_date = $date_obj_temp->format('Y-m-d');
+                                }
+                            }
+                            
+                            if ($event_date === $item['date']) {
+                                $matches_date = true;
+                            }
+                        }
+                        
+                        if ($matches_date) {
+                            $event_time = get_field('event_time', $event->ID);
+                            $location = get_field('event_location', $event->ID);
+                            
+                            if (is_array($location) && !empty($location)) {
+                                $location = $location[0];
+                            }
+                            
+                            if ($location && is_object($location)) {
+                                $loc_key = $location->ID;
+                                if (!isset($locations_times[$loc_key])) {
+                                    $locations_times[$loc_key] = array(
+                                        'name' => $location->post_title,
+                                        'url' => get_permalink($location->ID),
+                                        'time' => $event_time
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                ?>
+                
+                <div class="cerrito-themes-list-item">
+                    <div class="cerrito-themes-date-box">
+                        <div class="cerrito-themes-day"><?php echo esc_html($day_name); ?></div>
+                        <div class="cerrito-themes-date"><?php echo esc_html($date_num); ?></div>
+                    </div>
+                    
+                    <div class="cerrito-themes-info-box">
+                        <div class="cerrito-themes-header">
+                            <?php if ($theme_emoji): ?>
+                                <div class="cerrito-themes-emoji"><?php echo esc_html($theme_emoji); ?></div>
+                            <?php endif; ?>
+                            <div class="cerrito-themes-name"><?php echo esc_html($theme->name); ?></div>
+                        </div>
+                        
+                        <?php if (!empty($locations_times)): ?>
+                            <div class="cerrito-themes-locations">
+                                <?php foreach ($locations_times as $location): ?>
+                                    <div class="cerrito-themes-location">
+                                        <a href="<?php echo esc_url($location['url']); ?>">
+                                            <?php echo esc_html(trim($location['name'])); ?>
+                                        </a>
+                                        <?php if ($location['time']): ?>
+                                            <span class="cerrito-themes-time">
+                                                <span class="cerrito-themes-arrow">→</span>
+                                                <?php echo esc_html($location['time']); ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <?php
+            }
+        } else {
+            ?>
+            <div class="cerrito-themes-empty">
+                <p>No upcoming themed rounds scheduled.</p>
+            </div>
+            <?php
+        }
+        ?>
+    </div>
+    
+    <?php
+    return ob_get_clean();
+}
+add_shortcode('cerrito_upcoming_themes_list', 'cerrito_upcoming_themes_list_shortcode');
