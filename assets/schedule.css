@@ -1,0 +1,438 @@
+/* =============================================================================
+   Cerrito Schedule — schedule.css
+   Version: 6.2
+   All shortcode styles in one file, loaded once via wp_enqueue_style().
+   ============================================================================= */
+
+/* ── Shared layout ──────────────────────────────────────────────────────────── */
+
+.cerrito-schedule,
+.cerrito-recurring-schedule,
+.cerrito-master-schedule,
+.cerrito-today-schedule,
+.cerrito-themed-rounds,
+.cerrito-themes-list {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ── Day / date headers ─────────────────────────────────────────────────────── */
+
+.cerrito-date-header,
+.cerrito-day-header {
+    background: #333;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+/* ── Section labels (master schedule "Every Monday" / "Upcoming") ───────────── */
+
+.cerrito-section-label {
+    font-size: 0.9em;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+/* ── Occurrence title ───────────────────────────────────────────────────────── */
+
+.cerrito-occurrence-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    padding: 5px 0;
+    border-bottom: 2px solid #ddd;
+}
+
+.cerrito-occurrence-title--small {
+    font-size: 1em;
+    padding: 5px 0;
+}
+
+.cerrito-game-emoji {
+    font-size: 1.3em;
+    margin-right: 8px;
+}
+
+/* Inline theme label on the occurrence title line */
+.cerrito-theme-inline {
+    color: #e91e63;
+    font-style: italic;
+    margin-left: 10px;
+}
+
+/* "Theme Rounds" badge shown inside the master schedule group header */
+.cerrito-theme-badge {
+    color: #e91e63;
+    font-style: italic;
+    margin-left: 10px;
+}
+
+/* Date badge "(Mar 19)" shown next to one-time events */
+.cerrito-date-badge {
+    color: #0066cc;
+    font-size: 0.9em;
+    margin-left: 10px;
+}
+
+/* ── Game header (logo + info side-by-side) ─────────────────────────────────── */
+
+.cerrito-game-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.cerrito-game-header .cerrito-game-logo {
+    flex-shrink: 0;
+}
+
+.cerrito-game-logo img {
+    max-width: 100px;
+    height: auto;
+}
+
+.cerrito-game-description {
+    color: #666;
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
+/* ── Theme display block ────────────────────────────────────────────────────── */
+
+.cerrito-theme-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 10px 15px;
+    background: #f0f0f0;
+    border-radius: 6px;
+}
+
+.cerrito-theme-emoji { font-size: 2em; line-height: 1; }
+.cerrito-theme-name  { flex: 1; font-weight: 600; color: #e91e63; }
+
+/* ── Location cards ─────────────────────────────────────────────────────────── */
+
+.cerrito-location-card {
+    background: #fff;
+    border-left: 4px solid #0066cc;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.cerrito-location-card.trivia { border-left-color: #ff6b6b; }
+.cerrito-location-card.bingo  { border-left-color: #4ecdc4; }
+
+.cerrito-location-logo {
+    width: 100%;
+    max-width: 120px;
+}
+
+.cerrito-location-logo img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.cerrito-location-name {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.cerrito-location-name a { color: #0066cc; text-decoration: none; }
+.cerrito-location-name a:hover { text-decoration: underline; }
+
+.cerrito-location-time    { font-size: 1.05em; color: #333; margin-bottom: 8px; }
+.cerrito-location-address { color: #666; font-size: 0.95em; margin-bottom: 8px; }
+.cerrito-location-badges  { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+
+.cerrito-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    background: #ff6b6b;
+    color: #fff;
+}
+
+.cerrito-location-notes {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    font-size: 0.95em;
+}
+
+/* ── [cerrito_schedule] specific ────────────────────────────────────────────── */
+
+.cerrito-date-section { margin-bottom: 40px; }
+
+/* Slim event card used in the basic schedule (no logo column) */
+.cerrito-event {
+    background: #fff;
+    border-left: 4px solid #0066cc;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.cerrito-event:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cerrito-event.trivia { border-left-color: #ff6b6b; }
+.cerrito-event.bingo  { border-left-color: #4ecdc4; }
+
+.cerrito-event-type {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+}
+
+.cerrito-event-theme { color: #e91e63; font-style: italic; margin-left: 10px; }
+
+.cerrito-event-venue { font-size: 1.05em; margin: 8px 0; }
+.cerrito-event-venue a { color: #0066cc; text-decoration: none; font-weight: 500; }
+.cerrito-event-venue a:hover { text-decoration: underline; }
+.cerrito-event-time { color: #666; margin-left: 5px; }
+
+/* ── [cerrito_recurring_schedule] specific ──────────────────────────────────── */
+
+.cerrito-recurring-day      { margin-bottom: 50px; }
+.cerrito-recurring-occurrence { margin-bottom: 30px; }
+
+.cerrito-coming-soon-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #ddd;
+}
+
+.cerrito-coming-soon-item { margin-bottom: 20px; }
+
+/* ── [cerrito_master_schedule] specific ─────────────────────────────────────── */
+
+.cerrito-master-day     { margin-bottom: 50px; }
+.cerrito-master-section { margin-bottom: 30px; }
+.cerrito-event-group    { margin-bottom: 20px; }
+
+/* ── [cerrito_today] — full style ───────────────────────────────────────────── */
+
+.cerrito-today-schedule { max-width: 1200px; margin: 0 auto; }
+
+.cerrito-today-header {
+    background: #333;
+    color: #fff;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.cerrito-today-header h2 { margin: 0; font-size: 1.5em; }
+.cerrito-today-day  { font-size: 2em; font-weight: bold; }
+.cerrito-today-date { font-size: 1em; opacity: 0.9; margin-top: 5px; }
+.cerrito-today-occurrence { margin-bottom: 30px; }
+
+.cerrito-today-empty {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 1.1em;
+}
+
+/* ── [cerrito_today] — compact style ────────────────────────────────────────── */
+
+.cerrito-today-schedule.compact { max-width: 600px; }
+
+.cerrito-today-schedule.compact .cerrito-today-header {
+    background: transparent;
+    color: #333;
+    padding: 10px 0;
+    text-align: left;
+}
+
+.cerrito-today-schedule.compact .cerrito-today-header h2 {
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.cerrito-today-schedule.compact .cerrito-today-occurrence { margin-bottom: 25px; }
+.cerrito-today-schedule.compact .cerrito-today-empty      { text-align: left; padding: 20px 0; }
+
+.cerrito-compact-venue {
+    padding-left: 15px;
+    margin-bottom: 5px;
+    font-size: 1em;
+}
+
+.cerrito-compact-venue a { color: #333; text-decoration: none; font-weight: 500; }
+.cerrito-compact-venue a:hover { color: #0066cc; }
+
+/* ── [cerrito_themed_rounds] ────────────────────────────────────────────────── */
+
+.cerrito-themed-rounds { max-width: 600px; margin: 0 auto; }
+
+.cerrito-themed-round {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.cerrito-themed-round:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cerrito-themed-date {
+    text-align: center;
+    padding: 10px;
+    border-radius: 6px;
+    background: #0066cc;
+    color: #fff;
+}
+
+.cerrito-themed-date.trivia { background: #ff6b6b; }
+.cerrito-themed-date.bingo  { background: #4ecdc4; }
+
+.cerrito-themed-day { font-size: 0.85em; font-weight: 600; text-transform: uppercase; margin-bottom: 3px; }
+.cerrito-themed-num { font-size: 1.8em; font-weight: bold; line-height: 1; }
+
+.cerrito-themed-info  { display: flex; align-items: center; gap: 10px; }
+.cerrito-themed-emoji { font-size: 2em; line-height: 1; }
+
+.cerrito-themed-name { flex: 1; }
+.cerrito-themed-name a { color: #333; text-decoration: none; font-size: 1.1em; font-weight: 600; display: block; }
+.cerrito-themed-name a:hover { color: #0066cc; }
+
+/* ── [cerrito_upcoming_themes_list] ─────────────────────────────────────────── */
+
+.cerrito-themes-list { max-width: 800px; margin: 0 auto; }
+
+.cerrito-themes-list-item {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+    align-items: start;
+}
+
+.cerrito-themes-date-box {
+    background: #2563eb;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.cerrito-themes-day      { font-size: 0.75em; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+.cerrito-themes-date-num { font-size: 1.8em; font-weight: bold; line-height: 1; }
+
+.cerrito-themes-info-box {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.cerrito-themes-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.cerrito-themes-emoji { font-size: 2em; line-height: 1; }
+
+.cerrito-themes-name {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #2563eb;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.cerrito-themes-location {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+    font-size: 1em;
+    color: #333;
+    line-height: 1.2;
+}
+
+.cerrito-themes-arrow { color: #666; flex-shrink: 0; }
+.cerrito-themes-time  { flex-shrink: 0; }
+.cerrito-themes-location-name { margin-left: auto; text-align: right; }
+.cerrito-themes-location-name a { color: #333; text-decoration: none; }
+.cerrito-themes-location-name a:hover { color: #2563eb; }
+
+/* ── Empty state ─────────────────────────────────────────────────────────────── */
+
+.cerrito-empty {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .cerrito-location-card {
+        grid-template-columns: 1fr;
+    }
+
+    .cerrito-location-logo {
+        max-width: 200px;
+        margin: 0 auto;
+    }
+
+    .cerrito-themes-list-item {
+        grid-template-columns: 90px 1fr;
+    }
+
+    .cerrito-themes-location {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cerrito-themes-location-name { margin-left: 0; text-align: left; }
+}
+
+@media (max-width: 600px) {
+    .cerrito-themed-round {
+        grid-template-columns: 90px 1fr;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .cerrito-themed-num  { font-size: 1.5em; }
+    .cerrito-themed-emoji { font-size: 1.5em; }
+    .cerrito-themed-name a { font-size: 1em; }
+}
