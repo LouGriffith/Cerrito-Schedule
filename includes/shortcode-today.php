@@ -66,10 +66,10 @@ function cerrito_today_schedule_shortcode( array $atts ): string {
     // ── Header ────────────────────────────────────────────────────────────────
     echo '<div class="cerrito-today-header">';
     if ( $atts['style'] === 'compact' ) {
-        echo '<h2>' . esc_html( $today . ' ' . date( 'M j' ) ) . '</h2>';
+        echo '<h2>' . esc_html( date( 'l, F j, Y' ) ) . '</h2>';
     } else {
         echo '<div class="cerrito-today-day">'  . esc_html( strtoupper( $today ) ) . '</div>';
-        echo '<div class="cerrito-today-date">' . esc_html( date( 'F j, Y' ) )     . '</div>';
+        echo '<div class="cerrito-today-date">' . esc_html( date( 'l, F j, Y' ) ) . '</div>';
     }
     echo '</div>';
 

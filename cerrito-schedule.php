@@ -1,16 +1,16 @@
 <?php
 /**
  * Plugin Name: Cerrito Schedule Display
- * Plugin URI:  https://cerritoentertainment.com
+ * Plugin URI:  https://github.com/LouGriffith/Cerrito-Schedule
  * Description: Schedule shortcodes for displaying events (works with ACF)
- * Version:     6.2
+ * Version:     6.3
  * Author:      Lou Griffith
  * Author URI:  https://lougriffith.com
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'CERRITO_SCHEDULE_VERSION', '6.2' );
+define( 'CERRITO_SCHEDULE_VERSION', '6.3' );
 define( 'CERRITO_SCHEDULE_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'CERRITO_SCHEDULE_URL',     plugin_dir_url( __FILE__ ) );
 
