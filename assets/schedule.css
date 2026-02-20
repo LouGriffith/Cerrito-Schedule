@@ -1,6 +1,6 @@
 /* =============================================================================
    Cerrito Schedule — schedule.css
-   Version: 6.2
+   Version: 6.3
    All shortcode styles in one file, loaded once via wp_enqueue_style().
    ============================================================================= */
 
@@ -244,7 +244,7 @@
     color: #fff;
     padding: 15px 20px;
     border-radius: 8px;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
     text-align: center;
 }
 
@@ -268,6 +268,7 @@
     background: transparent;
     color: #333;
     padding: 10px 0;
+    margin-bottom: 10px;
     text-align: left;
 }
 
