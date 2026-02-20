@@ -14,14 +14,16 @@ class Cerrito_Schedule_Updater {
 
     private string $plugin_slug;
     private string $plugin_file;
+    private string $plugin_folder;
     private string $github_user = 'LouGriffith';
     private string $github_repo = 'Cerrito-Schedule';
     private array  $plugin_data  = [];
     private mixed  $github_response = null;
 
     public function __construct( string $plugin_file ) {
-        $this->plugin_file = $plugin_file;
-        $this->plugin_slug = plugin_basename( $plugin_file );
+        $this->plugin_file   = $plugin_file;
+        $this->plugin_slug   = plugin_basename( $plugin_file );          // e.g. cerrito-schedule/cerrito-schedule.php
+        $this->plugin_folder = dirname( plugin_basename( $plugin_file ) ); // e.g. cerrito-schedule
 
         add_filter( 'pre_set_site_transient_update_plugins', [ $this, 'check_for_update' ] );
         add_filter( 'plugins_api',                           [ $this, 'plugin_info' ], 20, 3 );
@@ -97,7 +99,7 @@ class Cerrito_Schedule_Updater {
 
     /**
      * Strip a leading "v" or "V" from a GitHub tag to get a plain version string.
-     * e.g. "v6.2" → "6.2"
+     * e.g. "v6.3" → "6.3"
      */
     private function normalize_version( string $tag ): string {
         return ltrim( $tag, 'vV' );
@@ -125,7 +127,8 @@ class Cerrito_Schedule_Updater {
 
         if ( version_compare( $latest_version, $current_version, '>' ) ) {
             $transient->response[ $this->plugin_slug ] = (object) [
-                'slug'        => $this->plugin_slug,
+                'id'          => $this->plugin_folder,
+                'slug'        => $this->plugin_folder,
                 'plugin'      => $this->plugin_slug,
                 'new_version' => $latest_version,
                 'url'         => "https://github.com/{$this->github_user}/{$this->github_repo}",
@@ -140,13 +143,14 @@ class Cerrito_Schedule_Updater {
 
     /**
      * Populate the "View details" modal in the plugins list.
+     * $args->slug is the plugin folder name (e.g. "cerrito-schedule").
      */
     public function plugin_info( mixed $result, string $action, object $args ): mixed {
         if ( $action !== 'plugin_information' ) {
             return $result;
         }
 
-        if ( ! isset( $args->slug ) || $args->slug !== dirname( $this->plugin_slug ) ) {
+        if ( ! isset( $args->slug ) || $args->slug !== $this->plugin_folder ) {
             return $result;
         }
 
@@ -159,9 +163,9 @@ class Cerrito_Schedule_Updater {
 
         return (object) [
             'name'          => $plugin_data['Name'],
-            'slug'          => dirname( $this->plugin_slug ),
+            'slug'          => $this->plugin_folder,
             'version'       => $this->normalize_version( $release->tag_name ),
-            'author'        => $plugin_data['Author'],
+            'author'        => '<a href="' . esc_url( $plugin_data['AuthorURI'] ) . '">' . esc_html( $plugin_data['Author'] ) . '</a>',
             'homepage'      => $plugin_data['PluginURI'],
             'download_link' => $this->get_download_url( $release ),
             'sections'      => [
