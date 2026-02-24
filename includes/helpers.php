@@ -118,7 +118,7 @@ function cerrito_get_event_type_string( int $post_id ): string {
  * @return WP_Term|false   Theme term with ->emoji and ->image attached, or false
  */
 function cerrito_get_event_theme( int $term_id, string $date = null ): WP_Term|false {
-    if ( $date === null ) $date = date( 'Y-m-d' );
+    if ( $date === null ) $date = wp_date( 'Y-m-d' );
 
     $themed_dates = get_term_meta( $term_id, 'themed_dates', true );
     if ( empty( $themed_dates ) || ! is_array( $themed_dates ) ) return false;
@@ -145,8 +145,8 @@ function cerrito_get_event_theme( int $term_id, string $date = null ): WP_Term|f
  * Returns a formatted string like "St. Patrick's Day (Mar 19)" or ''.
  */
 function cerrito_get_next_themed_date_for_day( int $term_id, string $day_name, int $days_ahead = 60 ): string {
-    $start      = date( 'Y-m-d' );
-    $end        = date( 'Y-m-d', strtotime( "+{$days_ahead} days" ) );
+    $start      = wp_date( 'Y-m-d' );
+    $end        = wp_date( 'Y-m-d', strtotime( "+{$days_ahead} days" ) );
     $dated_meta = get_term_meta( $term_id, 'themed_dates', true );
 
     if ( empty( $dated_meta ) || ! is_array( $dated_meta ) ) return '';

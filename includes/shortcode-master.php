@@ -32,8 +32,8 @@ function cerrito_master_schedule_shortcode( array $atts ): string {
     ob_start();
 
     $day_order  = [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ];
-    $today      = date( 'Y-m-d' );
-    $end_date   = date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
+    $today      = wp_date( 'Y-m-d' );
+    $end_date   = wp_date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
     $days_ahead = (int) $atts['days_ahead'];
 
     $all_events = get_posts( [ 'post_type' => 'event', 'posts_per_page' => -1 ] );

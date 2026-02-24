@@ -22,8 +22,8 @@ function cerrito_today_schedule_shortcode( array $atts ): string {
     cerrito_enqueue_styles();
     ob_start();
 
-    $today      = date( 'l' );       // e.g. "Wednesday"
-    $today_date = date( 'Y-m-d' );
+    $today      = wp_date( 'l' );       // e.g. "Wednesday"
+    $today_date = wp_date( 'Y-m-d' );
 
     $all_events   = get_posts( [ 'post_type' => 'event', 'posts_per_page' => -1 ] );
     $today_groups = [];
@@ -66,10 +66,10 @@ function cerrito_today_schedule_shortcode( array $atts ): string {
     // ── Header ────────────────────────────────────────────────────────────────
     echo '<div class="cerrito-today-header">';
     if ( $atts['style'] === 'compact' ) {
-        echo '<h2>' . esc_html( date( 'l, F j, Y' ) ) . '</h2>';
+        echo '<h2>' . esc_html( wp_date( 'l, F j, Y' ) ) . '</h2>';
     } else {
         echo '<div class="cerrito-today-day">'  . esc_html( strtoupper( $today ) ) . '</div>';
-        echo '<div class="cerrito-today-date">' . esc_html( date( 'l, F j, Y' ) ) . '</div>';
+        echo '<div class="cerrito-today-date">' . esc_html( wp_date( 'l, F j, Y' ) ) . '</div>';
     }
     echo '</div>';
 

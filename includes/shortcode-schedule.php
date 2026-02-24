@@ -30,8 +30,8 @@ function cerrito_schedule_shortcode( array $atts ): string {
     cerrito_enqueue_styles();
     ob_start();
 
-    $today    = date( 'Y-m-d' );
-    $end_date = date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
+    $today    = wp_date( 'Y-m-d' );
+    $end_date = wp_date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
 
     $events = get_posts( [
         'post_type'      => 'event',
