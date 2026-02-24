@@ -20,8 +20,8 @@ function cerrito_themed_rounds_shortcode( array $atts ): string {
     cerrito_enqueue_styles();
     ob_start();
 
-    $today      = date( 'Y-m-d' );
-    $end_date   = date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
+    $today      = wp_date( 'Y-m-d' );
+    $end_date   = wp_date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
 
     // Events with an explicit manual theme
     $manual_theme_events = get_posts( [
