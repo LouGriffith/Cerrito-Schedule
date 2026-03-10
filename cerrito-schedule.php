@@ -3,14 +3,14 @@
  * Plugin Name: Cerrito Schedule Display
  * Plugin URI:  https://github.com/lougriffith/cerrito-schedule
  * Description: Schedule shortcodes for displaying events (works with ACF)
- * Version:     6.5
+ * Version:     6.6.0
  * Author:      Lou Griffith
  * Author URI:  https://lougriffith.com
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'CERRITO_SCHEDULE_VERSION', '6.5' );
+define( 'CERRITO_SCHEDULE_VERSION', '6.6.0' );
 define( 'CERRITO_SCHEDULE_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'CERRITO_SCHEDULE_URL',     plugin_dir_url( __FILE__ ) );
 
@@ -25,6 +25,7 @@ require_once CERRITO_SCHEDULE_DIR . 'includes/shortcode-master.php';
 require_once CERRITO_SCHEDULE_DIR . 'includes/shortcode-today.php';
 require_once CERRITO_SCHEDULE_DIR . 'includes/shortcode-themed-rounds.php';
 require_once CERRITO_SCHEDULE_DIR . 'includes/shortcode-upcoming-themes.php';
+require_once CERRITO_SCHEDULE_DIR . 'includes/shortcode-locations.php';
 
 // ── Assets ────────────────────────────────────────────────────────────────────
 add_action( 'wp_enqueue_scripts', 'cerrito_schedule_enqueue_assets' );
