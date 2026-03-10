@@ -78,7 +78,12 @@ function cerrito_master_schedule_shortcode( array $atts ) {
         if ( $is_recurring ) {
             $when_terms = get_the_terms( $event->ID, 'when' );
             if ( $when_terms && ! is_wp_error( $when_terms ) ) {
-                foreach ( $when_terms as $t ) $days[] = $t->name;
+                foreach ( $when_terms as $t ) {
+                    // Skip if this occurrence is cancelled for the next date it falls on
+                    if ( ! cerrito_is_skipped_on( $event->ID, cerrito_next_date_for_day( $t->name ) ) ) {
+                        $days[] = $t->name;
+                    }
+                }
             }
         } elseif ( $event_date && $event_date >= $today && $event_date <= $end_date ) {
             $d = DateTime::createFromFormat( 'Y-m-d', $event_date );

@@ -326,6 +326,52 @@ function cerrito_sort_events_by_time( array $events ) {
     return $events;
 }
 
+// ── Skip-date helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Check whether a recurring event has been marked as skipped on a specific date.
+ *
+ * Uses the ACF repeater field `skip_dates` (sub-field `skip_date`, Date Picker).
+ * Returns true if $date appears in the repeater, false otherwise.
+ *
+ * ACF setup required:
+ *   Field group : Events
+ *   Field label : Skip Dates
+ *   Field name  : skip_dates          (Repeater)
+ *   Sub-field   : skip_date           (Date Picker — return format Y-m-d)
+ *
+ * @param int    $post_id  Event post ID
+ * @param string $date     Y-m-d date to check
+ * @return bool
+ */
+function cerrito_is_skipped_on( $post_id, $date ) {
+    $rows = get_field( 'skip_dates', $post_id );
+    if ( empty( $rows ) || ! is_array( $rows ) ) return false;
+    foreach ( $rows as $row ) {
+        $skip = cerrito_normalise_date( (string) ( $row['skip_date'] ?? '' ) );
+        if ( $skip === $date ) return true;
+    }
+    return false;
+}
+
+/**
+ * Given a day name (e.g. "Tuesday"), return the Y-m-d of the next calendar
+ * occurrence of that weekday on or after today (WordPress timezone).
+ *
+ * Used by recurring-schedule shortcodes to know which concrete date an event
+ * "would" fall on so skip_dates can be checked.
+ *
+ * @param string $day_name  Full English weekday name, e.g. "Monday"
+ * @return string           Y-m-d
+ */
+function cerrito_next_date_for_day( $day_name ) {
+    $today    = (int) wp_date( 'N' ); // 1 (Mon) … 7 (Sun)
+    $day_map  = [ 'Monday'=>1,'Tuesday'=>2,'Wednesday'=>3,'Thursday'=>4,'Friday'=>5,'Saturday'=>6,'Sunday'=>7 ];
+    $target   = $day_map[ $day_name ] ?? 1;
+    $diff     = ( $target - $today + 7 ) % 7;
+    return wp_date( 'Y-m-d', strtotime( "+{$diff} days" ) );
+}
+
 // ── Render helpers ────────────────────────────────────────────────────────────
 
 /**
