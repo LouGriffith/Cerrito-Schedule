@@ -6,7 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [6.5] - 2026-03-10
+## [6.6.0] - 2026-03-10
+
+### Added
+- `[cerrito_locations]` shortcode — location directory listing all venues with their
+  scheduled events nested underneath
+  - Recurring events grouped by day-of-week with time(s) shown inline
+  - Upcoming one-time events grouped by date
+  - Locations with no events show a configurable "no events" message rather than being hidden
+  - Parameters: `game_type`, `show_logo`, `show_address`, `show_specials`, `days_ahead`,
+    `orderby` (name/menu_order), `empty_message`
+
+---
+
+## [6.5.0]
 
 ### Added
 - `display="compact"` parameter for `[cerrito_master_schedule]` and `[cerrito_recurring_schedule]`
