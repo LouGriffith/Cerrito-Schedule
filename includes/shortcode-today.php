@@ -12,7 +12,11 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-function cerrito_today_schedule_shortcode( array $atts ): string {
+/**
+ * @param array $atts
+ * @return string
+ */
+function cerrito_today_schedule_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'show_game_logo'        => 'yes',
         'show_game_description' => 'no',
@@ -60,16 +64,22 @@ function cerrito_today_schedule_shortcode( array $atts ): string {
         $today_groups[ $group_key ]['events'][] = $event;
     }
 
+    // Sort each group's events by start time, earliest first
+    foreach ( $today_groups as &$group ) {
+        $group['events'] = cerrito_sort_events_by_time( $group['events'] );
+    }
+    unset( $group );
+
     $wrapper_class = 'cerrito-today-schedule' . ( $atts['style'] === 'compact' ? ' compact' : '' );
     echo '<div class="' . esc_attr( $wrapper_class ) . '">';
 
     // ── Header ────────────────────────────────────────────────────────────────
     echo '<div class="cerrito-today-header">';
     if ( $atts['style'] === 'compact' ) {
-        echo '<h2>' . esc_html( wp_date( 'l, F j, Y' ) ) . '</h2>';
+        echo '<h2>' . esc_html( $today . ' ' . wp_date( 'M j' ) ) . '</h2>';
     } else {
         echo '<div class="cerrito-today-day">'  . esc_html( strtoupper( $today ) ) . '</div>';
-        echo '<div class="cerrito-today-date">' . esc_html( wp_date( 'l, F j, Y' ) ) . '</div>';
+        echo '<div class="cerrito-today-date">' . esc_html( wp_date( 'F j, Y' ) )  . '</div>';
     }
     echo '</div>';
 
@@ -91,7 +101,10 @@ add_shortcode( 'cerrito_today', 'cerrito_today_schedule_shortcode' );
 
 // ── Style-specific renderers ──────────────────────────────────────────────────
 
-function cerrito_today_render_compact( array $groups ): void {
+/**
+ * @param array $groups
+ */
+function cerrito_today_render_compact( array $groups ) {
     foreach ( $groups as $group ) :
         $game_emoji = cerrito_get_game_emoji( $group['type'] );
         ?>
@@ -125,7 +138,11 @@ function cerrito_today_render_compact( array $groups ): void {
     endforeach;
 }
 
-function cerrito_today_render_full( array $groups, array $atts ): void {
+/**
+ * @param array $groups
+ * @param array $atts
+ */
+function cerrito_today_render_full( array $groups, array $atts ) {
     foreach ( $groups as $group ) :
         $game_emoji       = cerrito_get_game_emoji( $group['type'] );
         $game_logo        = ( $atts['show_game_logo']        === 'yes' ) ? cerrito_get_game_logo( $group['type'] )        : '';

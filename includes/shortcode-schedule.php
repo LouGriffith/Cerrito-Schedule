@@ -13,7 +13,11 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-function cerrito_schedule_shortcode( array $atts ): string {
+/**
+ * @param array $atts
+ * @return string
+ */
+function cerrito_schedule_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'show_coming_soon' => 'yes',
         'days_ahead'       => '30',
@@ -97,6 +101,9 @@ function cerrito_schedule_shortcode( array $atts ): string {
             echo '<div class="cerrito-date-header">' . esc_html( $display_date ) . '</div>';
 
             foreach ( $groups as $group ) {
+                // Sort events within this group by start time, earliest first
+                $sorted_events = cerrito_sort_events_by_time( $group['events'] );
+
                 $game_logo  = cerrito_get_game_logo( $group['type'] );
                 $game_emoji = cerrito_get_game_emoji( $group['type'] );
                 ?>
@@ -117,7 +124,7 @@ function cerrito_schedule_shortcode( array $atts ): string {
                         <?php endif; ?>
                     </div>
 
-                    <?php foreach ( $group['events'] as $event ) :
+                    <?php foreach ( $sorted_events as $event ) :
                         $event_time = get_field( 'event_time', $event->ID );
                         $location   = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
                         if ( $location ) : ?>

@@ -11,7 +11,11 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-function cerrito_themed_rounds_shortcode( array $atts ): string {
+/**
+ * @param array $atts
+ * @return string
+ */
+function cerrito_themed_rounds_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'days_ahead' => '60',
         'game_type'  => '',
@@ -20,8 +24,8 @@ function cerrito_themed_rounds_shortcode( array $atts ): string {
     cerrito_enqueue_styles();
     ob_start();
 
-    $today      = wp_date( 'Y-m-d' );
-    $end_date   = wp_date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
+    $today    = wp_date( 'Y-m-d' );
+    $end_date = wp_date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
 
     // Events with an explicit manual theme
     $manual_theme_events = get_posts( [
@@ -96,7 +100,7 @@ function cerrito_themed_rounds_shortcode( array $atts ): string {
             $day_name = strtoupper( substr( $date_obj->format( 'l' ), 0, 3 ) );
             $date_num = $date_obj->format( 'n/j' );
 
-            $types      = get_the_terms( $event->ID, 'game_type' );
+            $types       = get_the_terms( $event->ID, 'game_type' );
             $event_class = '';
             $game_emoji  = '';
 

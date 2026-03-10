@@ -12,7 +12,11 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-function cerrito_upcoming_themes_list_shortcode( array $atts ): string {
+/**
+ * @param array $atts
+ * @return string
+ */
+function cerrito_upcoming_themes_list_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'days_ahead' => '90',
         'game_type'  => '',
@@ -58,7 +62,7 @@ function cerrito_upcoming_themes_list_shortcode( array $atts ): string {
     }
 
     // Sort ascending by date
-    usort( $themed_list, fn( $a, $b ) => strcmp( $a['date'], $b['date'] ) );
+    usort( $themed_list, function( $a, $b ) { return strcmp( $a['date'], $b['date'] ); } );
 
     echo '<div class="cerrito-themes-list">';
 
@@ -121,8 +125,12 @@ add_shortcode( 'cerrito_upcoming_themes_list', 'cerrito_upcoming_themes_list_sho
 /**
  * For a themed-date list item, find all events/locations that occur on that date
  * for the associated game types. Returns array of [ name, url, time ] arrays.
+ *
+ * @param array    $item
+ * @param DateTime $date_obj
+ * @return array
  */
-function cerrito_get_locations_for_themed_date( array $item, DateTime $date_obj ): array {
+function cerrito_get_locations_for_themed_date( array $item, $date_obj ) {
     $locations = [];
     $date_str  = $date_obj->format( 'Y-m-d' );
     $day_name  = $date_obj->format( 'l' );

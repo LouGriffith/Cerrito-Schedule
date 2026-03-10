@@ -5,8 +5,6 @@
  * Hooks into WordPress's native plugin update pipeline and checks
  * GitHub Releases for newer versions. No third-party libraries required.
  *
- * Compatible with PHP 7.4+
- *
  * Usage: new Cerrito_Schedule_Updater( __FILE__ );
  */
 
@@ -14,31 +12,30 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class Cerrito_Schedule_Updater {
 
-    /** @var string Full plugin basename e.g. cerrito-schedule/cerrito-schedule.php */
+    /** @var string */
     private $plugin_slug;
 
-    /** @var string Absolute path to main plugin file */
+    /** @var string */
     private $plugin_file;
 
-    /** @var string Plugin folder name e.g. cerrito-schedule */
-    private $plugin_folder;
+    /** @var string */
+    private $github_user = 'lougriffith';
 
     /** @var string */
-    private $github_user = 'LouGriffith';
-
-    /** @var string */
-    private $github_repo = 'Cerrito-Schedule';
+    private $github_repo = 'cerrito-schedule';
 
     /** @var array */
     private $plugin_data = [];
 
-    /** @var object|null */
+    /** @var object|null|false */
     private $github_response = null;
 
+    /**
+     * @param string $plugin_file  Absolute path to the main plugin file (__FILE__)
+     */
     public function __construct( $plugin_file ) {
-        $this->plugin_file   = $plugin_file;
-        $this->plugin_slug   = plugin_basename( $plugin_file );
-        $this->plugin_folder = dirname( plugin_basename( $plugin_file ) );
+        $this->plugin_file = $plugin_file;
+        $this->plugin_slug = plugin_basename( $plugin_file );
 
         add_filter( 'pre_set_site_transient_update_plugins', [ $this, 'check_for_update' ] );
         add_filter( 'plugins_api',                           [ $this, 'plugin_info' ], 20, 3 );
@@ -48,6 +45,9 @@ class Cerrito_Schedule_Updater {
 
     // ── Private helpers ───────────────────────────────────────────────────────
 
+    /**
+     * @return array
+     */
     private function get_plugin_data() {
         if ( empty( $this->plugin_data ) ) {
             $this->plugin_data = get_plugin_data( $this->plugin_file );
@@ -101,6 +101,7 @@ class Cerrito_Schedule_Updater {
 
     /**
      * Return the download URL for the release zip.
+     * Prefers an explicit .zip asset; falls back to GitHub's auto-generated source zip.
      *
      * @param object $release
      * @return string
@@ -117,7 +118,8 @@ class Cerrito_Schedule_Updater {
     }
 
     /**
-     * Strip a leading "v" or "V" from a GitHub tag.
+     * Strip a leading "v" or "V" from a GitHub tag to get a plain version string.
+     * e.g. "v6.5" → "6.5"
      *
      * @param string $tag
      * @return string
@@ -129,6 +131,9 @@ class Cerrito_Schedule_Updater {
     // ── WordPress hooks ───────────────────────────────────────────────────────
 
     /**
+     * Inject our plugin into WordPress's update transient when a newer
+     * version is available on GitHub.
+     *
      * @param object $transient
      * @return object
      */
@@ -148,8 +153,7 @@ class Cerrito_Schedule_Updater {
 
         if ( version_compare( $latest_version, $current_version, '>' ) ) {
             $transient->response[ $this->plugin_slug ] = (object) [
-                'id'          => $this->plugin_folder,
-                'slug'        => $this->plugin_folder,
+                'slug'        => dirname( $this->plugin_slug ),
                 'plugin'      => $this->plugin_slug,
                 'new_version' => $latest_version,
                 'url'         => "https://github.com/{$this->github_user}/{$this->github_repo}",
@@ -175,7 +179,7 @@ class Cerrito_Schedule_Updater {
             return $result;
         }
 
-        if ( ! isset( $args->slug ) || $args->slug !== $this->plugin_folder ) {
+        if ( ! isset( $args->slug ) || $args->slug !== dirname( $this->plugin_slug ) ) {
             return $result;
         }
 
@@ -188,23 +192,24 @@ class Cerrito_Schedule_Updater {
 
         return (object) [
             'name'          => $plugin_data['Name'],
-            'slug'          => $this->plugin_folder,
+            'slug'          => dirname( $this->plugin_slug ),
             'version'       => $this->normalize_version( $release->tag_name ),
-            'author'        => '<a href="' . esc_url( $plugin_data['AuthorURI'] ) . '">' . esc_html( $plugin_data['Author'] ) . '</a>',
+            'author'        => $plugin_data['Author'],
             'homepage'      => $plugin_data['PluginURI'],
             'download_link' => $this->get_download_url( $release ),
             'sections'      => [
                 'description' => $plugin_data['Description'],
                 'changelog'   => nl2br( isset( $release->body ) ? esc_html( $release->body ) : 'See GitHub for release notes.' ),
             ],
-            'last_updated'  => isset( $release->published_at ) ? date( 'Y-m-d', strtotime( $release->published_at ) ) : '',
+            'last_updated'  => isset( $release->published_at ) ? wp_date( 'Y-m-d', strtotime( $release->published_at ) ) : '',
             'tested'        => get_bloginfo( 'version' ),
             'requires'      => '5.0',
         ];
     }
 
     /**
-     * After install: rename the extracted folder and re-activate.
+     * After install: rename the extracted GitHub zip folder to match
+     * the expected plugin directory, then re-activate the plugin.
      *
      * @param mixed $response
      * @param array $hook_extra
@@ -228,7 +233,8 @@ class Cerrito_Schedule_Updater {
     }
 
     /**
-     * Clear cached release data after an upgrade.
+     * Delete the cached release after an upgrade so the next check
+     * fetches fresh data from GitHub.
      *
      * @param object $upgrader
      * @param array  $options
