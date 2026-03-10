@@ -43,6 +43,10 @@ function cerrito_today_schedule_shortcode( array $atts ) {
                     if ( $t->name === $today ) { $include = true; break; }
                 }
             }
+            // Suppress if this occurrence is skipped on today's date
+            if ( $include && cerrito_is_skipped_on( $event->ID, $today_date ) ) {
+                $include = false;
+            }
         } else {
             $include = ( cerrito_normalise_date( get_field( 'event_date', $event->ID ) ) === $today_date );
         }
