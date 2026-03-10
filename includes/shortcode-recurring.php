@@ -7,14 +7,21 @@
  * Parameters:
  *   location   string  Location slug or ID (auto-detected on single location pages)
  *   game_type  string  Filter by game type slug or name
+ *   display    string  'full' (default) | 'compact'
+ *                      compact = no venue cards; shows time → venue name inline
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-function cerrito_recurring_schedule_shortcode( array $atts ): string {
+/**
+ * @param array $atts
+ * @return string
+ */
+function cerrito_recurring_schedule_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'location'  => '',
         'game_type' => '',
+        'display'   => 'full',
     ], $atts );
 
     if ( empty( $atts['location'] ) && is_singular( 'location' ) ) {
@@ -24,6 +31,8 @@ function cerrito_recurring_schedule_shortcode( array $atts ): string {
 
     cerrito_enqueue_styles();
     ob_start();
+
+    $display = $atts['display'];
 
     $events = get_posts( [
         'post_type'      => 'event',
@@ -44,7 +53,8 @@ function cerrito_recurring_schedule_shortcode( array $atts ): string {
         $events = cerrito_filter_by_game_type( $events, $atts['game_type'] );
     }
 
-    echo '<div class="cerrito-recurring-schedule">';
+    $wrapper_class = 'cerrito-recurring-schedule' . ( $display === 'compact' ? ' cerrito-recurring-schedule--compact' : '' );
+    echo '<div class="' . esc_attr( $wrapper_class ) . '">';
 
     if ( $events ) {
         $day_order     = [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ];
@@ -85,7 +95,6 @@ function cerrito_recurring_schedule_shortcode( array $atts ): string {
             }
         }
 
-        // Render by canonical day order
         foreach ( $day_order as $day ) {
             if ( empty( $events_by_day[ $day ] ) ) continue;
 
@@ -93,24 +102,28 @@ function cerrito_recurring_schedule_shortcode( array $atts ): string {
             echo '<div class="cerrito-day-header">EVERY ' . esc_html( strtoupper( $day ) ) . '</div>';
 
             foreach ( $events_by_day[ $day ] as $group ) {
-                $game_emoji = cerrito_get_game_emoji( $group['type'] );
-                ?>
-                <div class="cerrito-recurring-occurrence">
-                    <div class="cerrito-occurrence-title">
-                        <?php if ( $game_emoji ) : ?>
-                            <span class="cerrito-game-emoji"><?php echo esc_html( $game_emoji ); ?></span>
-                        <?php endif; ?>
-                        <?php echo esc_html( $group['type'] ); ?>
-                        <?php if ( $group['theme'] ) : ?>
-                            <span class="cerrito-theme-inline"><?php echo esc_html( $group['theme'] ); ?></span>
-                        <?php endif; ?>
-                    </div>
+                if ( $display === 'compact' ) {
+                    echo cerrito_render_event_group_compact( $group, true );
+                } else {
+                    $game_emoji = cerrito_get_game_emoji( $group['type'] );
+                    ?>
+                    <div class="cerrito-recurring-occurrence">
+                        <div class="cerrito-occurrence-title">
+                            <?php if ( $game_emoji ) : ?>
+                                <span class="cerrito-game-emoji"><?php echo esc_html( $game_emoji ); ?></span>
+                            <?php endif; ?>
+                            <?php echo esc_html( $group['type'] ); ?>
+                            <?php if ( $group['theme'] ) : ?>
+                                <span class="cerrito-theme-inline"><?php echo esc_html( $group['theme'] ); ?></span>
+                            <?php endif; ?>
+                        </div>
 
-                    <?php foreach ( $group['events'] as $event ) :
-                        cerrito_render_location_card( $event, $group['class'] );
-                    endforeach; ?>
-                </div>
-                <?php
+                        <?php foreach ( $group['events'] as $event ) :
+                            cerrito_render_location_card( $event, $group['class'] );
+                        endforeach; ?>
+                    </div>
+                    <?php
+                }
             }
 
             echo '</div>'; // .cerrito-recurring-day
@@ -121,7 +134,11 @@ function cerrito_recurring_schedule_shortcode( array $atts ): string {
             echo '<div class="cerrito-coming-soon-section">';
             echo '<div class="cerrito-occurrence-title">Coming Soon</div>';
             foreach ( $coming_soon as $event ) {
-                cerrito_render_coming_soon_card( $event );
+                if ( $display === 'compact' ) {
+                    cerrito_render_coming_soon_compact( $event );
+                } else {
+                    cerrito_render_coming_soon_card( $event );
+                }
             }
             echo '</div>';
         }
@@ -136,9 +153,43 @@ function cerrito_recurring_schedule_shortcode( array $atts ): string {
 add_shortcode( 'cerrito_recurring_schedule', 'cerrito_recurring_schedule_shortcode' );
 
 /**
- * Render a "Coming Soon" card for a recurring event with no day assigned yet.
+ * Render a compact "Coming Soon" row (no card).
+ *
+ * @param WP_Post $event
  */
-function cerrito_render_coming_soon_card( WP_Post $event ): void {
+function cerrito_render_coming_soon_compact( $event ) {
+    $event_type = cerrito_get_event_type_string( $event->ID );
+    $location   = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
+    $game_emoji = cerrito_get_game_emoji( $event_type );
+
+    if ( ! $location ) return;
+    ?>
+    <div class="cerrito-event-group cerrito-event-group--compact">
+        <div class="cerrito-compact-type">
+            <?php if ( $game_emoji ) : ?>
+                <span class="cerrito-game-emoji"><?php echo esc_html( $game_emoji ); ?></span>
+            <?php endif; ?>
+            <?php echo esc_html( $event_type ); ?>
+        </div>
+        <div class="cerrito-compact-row">
+            <span class="cerrito-compact-time">TBA</span>
+            <span class="cerrito-compact-arrow">→</span>
+            <span class="cerrito-compact-venue">
+                <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
+                    <?php echo esc_html( $location->post_title ); ?>
+                </a>
+            </span>
+        </div>
+    </div>
+    <?php
+}
+
+/**
+ * Render a "Coming Soon" card for a recurring event with no day assigned yet.
+ *
+ * @param WP_Post $event
+ */
+function cerrito_render_coming_soon_card( $event ) {
     $event_type      = cerrito_get_event_type_string( $event->ID );
     $special_theme   = get_field( 'special_theme', $event->ID );
     $age_restriction = get_field( 'age_restriction', $event->ID );

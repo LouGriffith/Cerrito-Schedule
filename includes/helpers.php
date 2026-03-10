@@ -11,8 +11,11 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
  * Resolve an ACF relationship field (array or single object) to a WP_Post.
+ *
+ * @param mixed $field_value
+ * @return WP_Post|null
  */
-function cerrito_resolve_location( mixed $field_value ): ?WP_Post {
+function cerrito_resolve_location( $field_value ) {
     if ( is_array( $field_value ) && ! empty( $field_value ) ) {
         $field_value = $field_value[0];
     }
@@ -21,8 +24,11 @@ function cerrito_resolve_location( mixed $field_value ): ?WP_Post {
 
 /**
  * Resolve a location slug or numeric ID string to a post ID integer.
+ *
+ * @param string|int $location
+ * @return int
  */
-function cerrito_resolve_location_id( string|int $location ): int {
+function cerrito_resolve_location_id( $location ) {
     if ( is_numeric( $location ) ) return (int) $location;
     $post = get_page_by_path( $location, OBJECT, 'location' );
     return $post ? $post->ID : 0;
@@ -30,8 +36,11 @@ function cerrito_resolve_location_id( string|int $location ): int {
 
 /**
  * Get a location logo URL, trying multiple possible ACF field names.
+ *
+ * @param int $location_id
+ * @return string
  */
-function cerrito_get_location_logo( int $location_id ): string {
+function cerrito_get_location_logo( $location_id ) {
     foreach ( [ 'location_logo', 'logo', 'sponsor_logo' ] as $field_name ) {
         $field = get_field( $field_name, $location_id );
         if ( $field ) return cerrito_resolve_image_url( $field );
@@ -41,8 +50,11 @@ function cerrito_get_location_logo( int $location_id ): string {
 
 /**
  * Get a location address string, trying multiple possible ACF field names.
+ *
+ * @param int $location_id
+ * @return string
  */
-function cerrito_get_location_address( int $location_id ): string {
+function cerrito_get_location_address( $location_id ) {
     foreach ( [ 'location_address', 'address' ] as $field_name ) {
         $value = get_field( $field_name, $location_id );
         if ( $value ) return (string) $value;
@@ -54,8 +66,11 @@ function cerrito_get_location_address( int $location_id ): string {
 
 /**
  * Look up a game_type term by name or slug.
+ *
+ * @param string $type_name
+ * @return WP_Term|null
  */
-function cerrito_get_game_type_term( string $type_name ): ?WP_Term {
+function cerrito_get_game_type_term( $type_name ) {
     if ( ! $type_name ) return null;
     $term = get_term_by( 'name', $type_name, 'game_type' );
     if ( ! $term ) {
@@ -66,42 +81,57 @@ function cerrito_get_game_type_term( string $type_name ): ?WP_Term {
 
 /**
  * Get the emoji for a game type by name.
+ *
+ * @param string $type_name
+ * @return string
  */
-function cerrito_get_game_emoji( string $type_name ): string {
+function cerrito_get_game_emoji( $type_name ) {
     $term = cerrito_get_game_type_term( $type_name );
     return $term ? (string) get_field( 'game_emoji', 'game_type_' . $term->term_id ) : '';
 }
 
 /**
  * Get the logo URL for a game type by name.
+ *
+ * @param string $type_name
+ * @return string
  */
-function cerrito_get_game_logo( string $type_name ): string {
+function cerrito_get_game_logo( $type_name ) {
     $term = cerrito_get_game_type_term( $type_name );
     return $term ? cerrito_resolve_image_url( get_field( 'game_logo', 'game_type_' . $term->term_id ) ) : '';
 }
 
 /**
  * Get the description for a game type by name (native WP taxonomy description).
+ *
+ * @param string $type_name
+ * @return string
  */
-function cerrito_get_game_description( string $type_name ): string {
+function cerrito_get_game_description( $type_name ) {
     $term = cerrito_get_game_type_term( $type_name );
     return $term ? $term->description : '';
 }
 
 /**
  * Derive a CSS class ('trivia', 'bingo', or '') from a game type name string.
+ *
+ * @param string $event_type
+ * @return string
  */
-function cerrito_get_event_class( string $event_type ): string {
+function cerrito_get_event_class( $event_type ) {
     $lower = strtolower( $event_type );
-    if ( str_contains( $lower, 'trivia' ) ) return 'trivia';
-    if ( str_contains( $lower, 'bingo' )  ) return 'bingo';
+    if ( strpos( $lower, 'trivia' ) !== false ) return 'trivia';
+    if ( strpos( $lower, 'bingo' )  !== false ) return 'bingo';
     return '';
 }
 
 /**
  * Return a comma-separated string of game type names for a post.
+ *
+ * @param int $post_id
+ * @return string
  */
-function cerrito_get_event_type_string( int $post_id ): string {
+function cerrito_get_event_type_string( $post_id ) {
     $types = get_the_terms( $post_id, 'game_type' );
     if ( ! $types || is_wp_error( $types ) ) return '';
     return implode( ', ', wp_list_pluck( $types, 'name' ) );
@@ -111,13 +141,12 @@ function cerrito_get_event_type_string( int $post_id ): string {
 
 /**
  * Get the active theme for a game type on a specific date.
- * Checks the 'themed_dates' term meta array on the game type term.
  *
- * @param int    $term_id  game_type term ID
- * @param string $date     Y-m-d date string (defaults to today)
- * @return WP_Term|false   Theme term with ->emoji and ->image attached, or false
+ * @param int    $term_id
+ * @param string $date     Y-m-d
+ * @return WP_Term|false
  */
-function cerrito_get_event_theme( int $term_id, string $date = null ): WP_Term|false {
+function cerrito_get_event_theme( $term_id, $date = null ) {
     if ( $date === null ) $date = wp_date( 'Y-m-d' );
 
     $themed_dates = get_term_meta( $term_id, 'themed_dates', true );
@@ -142,9 +171,12 @@ function cerrito_get_event_theme( int $term_id, string $date = null ): WP_Term|f
  * Find the next upcoming themed date for a game type that falls on a specific
  * day of the week, within $days_ahead days from today.
  *
- * Returns a formatted string like "St. Patrick's Day (Mar 19)" or ''.
+ * @param int    $term_id
+ * @param string $day_name
+ * @param int    $days_ahead
+ * @return string  e.g. "St. Patrick's Day (Mar 19)" or ''
  */
-function cerrito_get_next_themed_date_for_day( int $term_id, string $day_name, int $days_ahead = 60 ): string {
+function cerrito_get_next_themed_date_for_day( $term_id, $day_name, $days_ahead = 60 ) {
     $start      = wp_date( 'Y-m-d' );
     $end        = wp_date( 'Y-m-d', strtotime( "+{$days_ahead} days" ) );
     $dated_meta = get_term_meta( $term_id, 'themed_dates', true );
@@ -171,8 +203,11 @@ function cerrito_get_next_themed_date_for_day( int $term_id, string $day_name, i
 
 /**
  * Resolve an ACF image field (array, attachment ID, or URL string) to a URL.
+ *
+ * @param mixed $field
+ * @return string
  */
-function cerrito_resolve_image_url( mixed $field ): string {
+function cerrito_resolve_image_url( $field ) {
     if ( is_array( $field ) )                    return $field['url'] ?? '';
     if ( is_numeric( $field ) )                  return (string) ( wp_get_attachment_url( (int) $field ) ?: '' );
     if ( is_string( $field ) && $field !== '' )  return $field;
@@ -184,8 +219,11 @@ function cerrito_resolve_image_url( mixed $field ): string {
 /**
  * Normalise an ACF date field to Y-m-d format.
  * Handles: Ymd (20250219), m/d/Y (02/19/2025), and Y-m-d strings.
+ *
+ * @param string $date
+ * @return string
  */
-function cerrito_normalise_date( string $date ): string {
+function cerrito_normalise_date( $date ) {
     if ( ! $date ) return '';
 
     // Ymd format
@@ -194,7 +232,7 @@ function cerrito_normalise_date( string $date ): string {
     }
 
     // m/d/Y format
-    if ( str_contains( $date, '/' ) ) {
+    if ( strpos( $date, '/' ) !== false ) {
         $d = DateTime::createFromFormat( 'm/d/Y', $date );
         return $d ? $d->format( 'Y-m-d' ) : $date;
     }
@@ -206,8 +244,11 @@ function cerrito_normalise_date( string $date ): string {
 
 /**
  * Replace newlines in an address string with spaces for single-line display.
+ *
+ * @param string $address
+ * @return string
  */
-function cerrito_flatten_address( string $address ): string {
+function cerrito_flatten_address( $address ) {
     return str_replace( [ "\r\n", "\n", "\r" ], ' ', $address );
 }
 
@@ -215,9 +256,13 @@ function cerrito_flatten_address( string $address ): string {
 
 /**
  * Filter an array of event WP_Posts to only those matching a game type slug or name.
+ *
+ * @param WP_Post[] $events
+ * @param string    $game_type
+ * @return WP_Post[]
  */
-function cerrito_filter_by_game_type( array $events, string $game_type ): array {
-    return array_filter( $events, function( WP_Post $event ) use ( $game_type ) {
+function cerrito_filter_by_game_type( array $events, $game_type ) {
+    return array_filter( $events, function( $event ) use ( $game_type ) {
         $types = get_the_terms( $event->ID, 'game_type' );
         if ( ! $types || is_wp_error( $types ) ) return false;
         foreach ( $types as $type ) {
@@ -231,12 +276,54 @@ function cerrito_filter_by_game_type( array $events, string $game_type ): array 
 
 /**
  * Filter an array of event WP_Posts to only those belonging to a given location ID.
+ *
+ * @param WP_Post[] $events
+ * @param int       $location_id
+ * @return WP_Post[]
  */
-function cerrito_filter_by_location( array $events, int $location_id ): array {
-    return array_filter( $events, function( WP_Post $event ) use ( $location_id ) {
+function cerrito_filter_by_location( array $events, $location_id ) {
+    return array_filter( $events, function( $event ) use ( $location_id ) {
         $loc = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
         return $loc && $loc->ID === $location_id;
     } );
+}
+
+// ── Sort helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Convert a free-text event_time string to minutes-since-midnight for sorting.
+ * Handles formats like "7:00 PM", "7pm", "19:00", "7:30", "7".
+ * Returns 9999 for blank/unparseable values so they sort last.
+ *
+ * @param string $time_str
+ * @return int
+ */
+function cerrito_time_to_minutes( $time_str ) {
+    $time_str = trim( (string) $time_str );
+    if ( $time_str === '' ) return 9999;
+
+    // strtotime handles most common human formats
+    $ts = strtotime( $time_str );
+    if ( $ts === false ) return 9999;
+
+    return (int) date( 'H', $ts ) * 60 + (int) date( 'i', $ts );
+}
+
+/**
+ * Sort an array of WP_Post event objects by their event_time ACF field,
+ * earliest first. Events with no time sort to the end.
+ * Returns a new sorted array; does not modify in place.
+ *
+ * @param WP_Post[] $events
+ * @return WP_Post[]
+ */
+function cerrito_sort_events_by_time( array $events ) {
+    usort( $events, function( $a, $b ) {
+        $ta = cerrito_time_to_minutes( get_field( 'event_time', $a->ID ) );
+        $tb = cerrito_time_to_minutes( get_field( 'event_time', $b->ID ) );
+        return $ta - $tb;
+    } );
+    return $events;
 }
 
 // ── Render helpers ────────────────────────────────────────────────────────────
@@ -248,8 +335,16 @@ function cerrito_filter_by_location( array $events, int $location_id ): array {
  * @param bool   $is_recurring       Whether this group represents a recurring event
  * @param string $show_game_logo     'yes'|'no'
  * @param string $show_game_description 'yes'|'no'
+ * @param string $display            'full'|'compact'
+ * @return string
  */
-function cerrito_render_event_group( array $group, bool $is_recurring, string $show_game_logo = 'no', string $show_game_description = 'no' ): string {
+function cerrito_render_event_group( array $group, $is_recurring, $show_game_logo = 'no', $show_game_description = 'no', $display = 'full' ) {
+    $group['events'] = cerrito_sort_events_by_time( $group['events'] );
+
+    if ( $display === 'compact' ) {
+        return cerrito_render_event_group_compact( $group, $is_recurring );
+    }
+
     ob_start();
 
     $game_emoji       = cerrito_get_game_emoji( $group['type'] );
@@ -268,9 +363,10 @@ function cerrito_render_event_group( array $group, bool $is_recurring, string $s
     }
 
     $show_date = ( ! $is_recurring && isset( $group['show_date'] ) ) ? $group['show_date'] : '';
+    $themed_attr = ! empty( $group['theme'] ) ? ' data-themed="1"' : '';
     ?>
 
-    <div class="cerrito-event-group">
+    <div class="cerrito-event-group"<?php echo $themed_attr; ?>>
 
         <?php if ( $game_logo || $game_description ) : ?>
             <div class="cerrito-game-header">
@@ -313,9 +409,67 @@ function cerrito_render_event_group( array $group, bool $is_recurring, string $s
 }
 
 /**
- * Render the occurrence title line (emoji + type + theme badge + date badge).
+ * Render a compact (no-card) event group — just type label + inline venue rows.
+ *
+ * @param array $group
+ * @param bool  $is_recurring
+ * @return string
  */
-function cerrito_render_occurrence_title( string $emoji, string $type, string $theme, string $date = '' ): void {
+function cerrito_render_event_group_compact( array $group, $is_recurring ) {
+    $group['events'] = cerrito_sort_events_by_time( $group['events'] );
+    ob_start();
+
+    $game_emoji  = cerrito_get_game_emoji( $group['type'] );
+    $show_date   = ( ! $is_recurring && isset( $group['show_date'] ) ) ? $group['show_date'] : '';
+    $themed_attr = ! empty( $group['theme'] ) ? ' data-themed="1"' : '';
+    ?>
+    <div class="cerrito-event-group cerrito-event-group--compact"<?php echo $themed_attr; ?>>
+
+        <div class="cerrito-compact-type <?php echo esc_attr( $group['class'] ); ?>">
+            <?php if ( $game_emoji ) : ?>
+                <span class="cerrito-game-emoji"><?php echo esc_html( $game_emoji ); ?></span>
+            <?php endif; ?>
+            <?php echo esc_html( $group['type'] ); ?>
+            <?php if ( $group['theme'] ) : ?>
+                <span class="cerrito-theme-badge"><?php echo esc_html( $group['theme'] ); ?></span>
+            <?php endif; ?>
+            <?php if ( $show_date ) : ?>
+                <span class="cerrito-date-badge">(<?php echo esc_html( $show_date ); ?>)</span>
+            <?php endif; ?>
+        </div>
+
+        <?php foreach ( $group['events'] as $event ) :
+            $event_time = get_field( 'event_time', $event->ID );
+            $location   = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
+            if ( ! $location ) continue;
+        ?>
+            <div class="cerrito-compact-row">
+                <span class="cerrito-compact-time">
+                    <?php echo $event_time ? esc_html( $event_time ) : ''; ?>
+                </span>
+                <span class="cerrito-compact-arrow">→</span>
+                <span class="cerrito-compact-venue">
+                    <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
+                        <?php echo esc_html( $location->post_title ); ?>
+                    </a>
+                </span>
+            </div>
+        <?php endforeach; ?>
+
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
+/**
+ * Render the occurrence title line (emoji + type + theme badge + date badge).
+ *
+ * @param string $emoji
+ * @param string $type
+ * @param string $theme
+ * @param string $date
+ */
+function cerrito_render_occurrence_title( $emoji, $type, $theme, $date = '' ) {
     ?>
     <div class="cerrito-occurrence-title">
         <?php if ( $emoji ) : ?>
@@ -334,8 +488,11 @@ function cerrito_render_occurrence_title( string $emoji, string $type, string $t
 
 /**
  * Render a location card for a single event.
+ *
+ * @param WP_Post $event
+ * @param string  $event_class
  */
-function cerrito_render_location_card( WP_Post $event, string $event_class ): void {
+function cerrito_render_location_card( $event, $event_class ) {
     $event_time      = get_field( 'event_time',      $event->ID );
     $location        = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
     $age_restriction = get_field( 'age_restriction', $event->ID );
@@ -378,10 +535,9 @@ function cerrito_render_location_card( WP_Post $event, string $event_class ): vo
 }
 
 /**
- * Enqueue the schedule stylesheet (called by each shortcode so the CSS loads
- * even if wp_enqueue_scripts has already fired, e.g. in page builders).
+ * Enqueue the schedule stylesheet.
  */
-function cerrito_enqueue_styles(): void {
+function cerrito_enqueue_styles() {
     if ( ! wp_style_is( 'cerrito-schedule', 'enqueued' ) ) {
         wp_enqueue_style( 'cerrito-schedule' );
     }

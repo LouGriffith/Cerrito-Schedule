@@ -2,177 +2,100 @@
 
 All notable changes to the Cerrito Schedule System will be documented in this file.
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [6.5] - 2026-03-10
+
+### Added
+- `display="compact"` parameter for `[cerrito_master_schedule]` and `[cerrito_recurring_schedule]`
+  — replaces full venue cards with tight inline rows: `time → venue name`
+- `show_day_filter="yes"` parameter for `[cerrito_master_schedule]`
+  — renders pill buttons (All · Mon · Tue …) above the schedule; only days with events appear
+- `default_day="Tuesday"` parameter — pre-selects a day on page load
+- `show_themed_filter="yes"` parameter for `[cerrito_master_schedule]`
+  — adds a 🎭 Themed toggle button; works independently or combined with the day filter
+- Both filters are two-dimensional: selecting "Tuesday + Themed" shows only themed Tuesday events;
+  days with no matching groups are automatically hidden
+
+### Changed
+- Events within each group are now sorted by start time (earliest first) across all shortcodes
+- `date()` replaced with `wp_date()` throughout for correct WordPress timezone handling
+- All PHP 8-only syntax removed for PHP 7.4 compatibility (union return types, `mixed` hints,
+  typed properties replaced with docblock comments)
+- Plugin URI updated to `https://github.com/lougriffith/cerrito-schedule`
+- GitHub updater repo references lowercased to match actual repository name
+
+### Fixed
+- `data-themed` attribute now stamped on event group divs in both full and compact display modes
+- Themed filter correctly hides entire day blocks when no themed events remain after filtering
+
+---
+
+## [6.4] - 2026-02-28
+
+### Fixed
+- Timezone bug: replaced all `date()` calls with `wp_date()` across 6 files so event dates
+  respect the WordPress-configured timezone rather than the server's UTC setting
+
+---
+
+## [6.2] - 2026-02-20
+
+### Added
+- `[cerrito_upcoming_themes_list]` shortcode — formatted upcoming themed dates from
+  game_type term meta, sorted by date with location/time details
+
+### Changed
+- CSS consolidated into single `schedule.css` loaded once via `wp_enqueue_style()`
+
+---
+
 ## [4.5] - 2026-02-16
 
 ### Added
-- New `[cerrito_themed_rounds]` shortcode for displaying upcoming themed events
-- Card-based layout with colored date boxes matching design mockup
-- Automatic filtering to show only events with special themes
-- Mobile responsive themed rounds display
-
-### Features
-- Day abbreviation display (WED, THU, FRI)
-- Date in M/D format (2/11, 3/5)
-- Game emoji integration
-- Theme name linked to event page
-- Hover effects on cards
-- Color coding: red for trivia, teal for bingo, blue for others
+- `[cerrito_themed_rounds]` shortcode — card-based display of upcoming themed events
+- Day abbreviation, M/D date format, game emoji, hover effects, colour coding
 
 ## [4.4] - 2026-02-16
 
 ### Added
-- Automatic location detection on single location pages
-- Shortcodes now auto-filter by current location when used on location templates
-- No manual location parameter needed in Elementor templates
-
-### Changed
-- All shortcodes detect `is_singular('location')` and apply location filter automatically
-- Can still manually override with explicit location parameter
+- Automatic location detection on single location pages (`is_singular('location')`)
 
 ## [4.3] - 2026-02-16
 
 ### Added
-- Compact style option for `[cerrito_today]` shortcode
-- `style="compact"` parameter for simpler homepage display
-
-### Changed
-- Today's events can now show as simple list or full cards
-- Default header format varies by style (compact vs full)
+- `style="compact"` parameter for `[cerrito_today]`
 
 ## [4.2] - 2026-02-16
 
 ### Added
-- New `[cerrito_today]` shortcode showing all events happening today
-- Automatic date detection and display
-- Support for both recurring and one-time events on current day
-
-### Features
-- Large day/date header
-- Same location card layout as other schedules
-- Empty state message when no events today
+- `[cerrito_today]` shortcode — all events (recurring + one-time) for the current day
 
 ## [4.1] - 2026-02-16
 
 ### Changed
-- Master schedule now uses native WordPress taxonomy description instead of custom ACF field
-- Game descriptions pulled from standard taxonomy description field
+- Game descriptions pulled from native taxonomy description field instead of custom ACF field
 
 ## [4.0] - 2026-02-16
 
 ### Added
-- New `[cerrito_master_schedule]` shortcode combining recurring and upcoming events
-- Events organized by day of week with separate sections for "Every Monday" vs "Upcoming"
-- Game logo display option via `show_game_logo` parameter
-- Game description display option via `show_game_description` parameter
-
-### Features
-- Comprehensive weekly view
-- Shows both recurring weekly events and upcoming one-time events
-- Organized by day of week (Mondays, Tuesdays, etc.)
-
-## [3.4] - 2026-02-16
-
-### Changed
-- Address display changed from multi-line to single line
-- Line breaks in addresses converted to spaces
-
-## [3.3] - 2026-02-16
-
-### Fixed
-- Location logo field name corrected to `location_logo`
-- Address field name corrected to `location_address`
-- Both fields now check correct ACF field names first
-
-## [3.2] - 2026-02-16
-
-### Fixed
-- Removed map_link requirement for address display
-- Added fallback field name checks for location logo and address
-- Improved compatibility with different ACF field naming
-
-## [3.1] - 2026-02-16
-
-### Fixed
-- Location logo now handles all ACF image return formats (array, ID, URL)
-- Address display properly renders on recurring schedule
+- `[cerrito_master_schedule]` shortcode combining recurring and upcoming events by day of week
+- `show_game_logo` and `show_game_description` parameters
 
 ## [3.0] - 2026-02-16
 
 ### Added
-- New `[cerrito_recurring_schedule]` shortcode for weekly recurring events
-- Location details display including logo, address, age restrictions, special notes
-- "Coming Soon" section for events without day assignment
-- Enhanced card layout for recurring events
-
-### Features
-- Events grouped by day of week (Every Monday, Every Tuesday, etc.)
-- Full location information cards
-- Location logo display
-- Clickable location names
-- Age restriction badges
-- Special notes display
+- `[cerrito_recurring_schedule]` shortcode — weekly recurring events with full location cards
+- "Coming Soon" section for events without a day assignment
 
 ## [2.0] - 2026-02-16
 
 ### Added
-- Game type filtering via `game_type` parameter
-- Location filtering via `location` parameter
-- Support for filtering by both slug and ID
-
-### Changed
-- Enhanced filtering system across all shortcodes
+- `game_type` and `location` filtering parameters across all shortcodes
 
 ## [1.0] - 2026-02-16
 
 ### Added
-- Initial release
-- `[cerrito_schedule]` shortcode for upcoming events
-- Basic event display with date grouping
-- Location and time display
-- Game type categorization
-- ACF integration
-- Admin columns and filters plugin
-- Event management system
-
-### Features
-- Event date and time fields
-- Location relationship
-- Game type taxonomy
-- Special theme support
-- Recurring event support
-- When (day of week) taxonomy
-- Age restriction field
-- Special notes field
-
-## Admin Plugin Changelog
-
-### [1.0] - 2026-02-16
-
-#### Added
-- Custom columns in Events admin list
-  - Date (formatted)
-  - Time
-  - Location (clickable)
-  - Recurring status with days
-  - Game Type (clickable filter)
-- Filter dropdowns
-  - Filter by location
-  - Filter by recurring/one-time status
-- Sortable columns
-  - All custom columns can be sorted
-- Enhanced admin interface
-
-## Upcoming Features
-
-### Planned
-- Themed dates feature for game types
-- Date-based theme assignment
-- Theme reusability across events
-- Enhanced theme management
-
-### Under Consideration
-- Email notifications for upcoming events
-- iCal export
-- Google Calendar integration
-- Social media integration
-- Event capacity management
+- Initial release: `[cerrito_schedule]` shortcode, ACF integration, admin columns plugin
