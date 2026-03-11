@@ -53,11 +53,25 @@ function cerrito_locations_shortcode( array $atts ) {
         $location_query_args['orderby'] = 'menu_order';
         $location_query_args['order']   = 'ASC';
     } else {
+        // Fetch alphabetically, then re-sort in PHP: letters A–Z first, numbers after
         $location_query_args['orderby'] = 'title';
         $location_query_args['order']   = 'ASC';
     }
 
     $locations = get_posts( $location_query_args );
+
+    // Re-sort: A–Z first, then 0–9 (WordPress default puts numbers before letters)
+    if ( $atts['orderby'] !== 'menu_order' ) {
+        usort( $locations, function( $a, $b ) {
+            $ta          = $a->post_title;
+            $tb          = $b->post_title;
+            $a_is_letter = ctype_alpha( mb_substr( $ta, 0, 1 ) );
+            $b_is_letter = ctype_alpha( mb_substr( $tb, 0, 1 ) );
+            if ( $a_is_letter && ! $b_is_letter ) return -1;
+            if ( ! $a_is_letter && $b_is_letter ) return  1;
+            return strcasecmp( $ta, $tb );
+        } );
+    }
 
     if ( empty( $locations ) ) {
         echo '<div class="cerrito-empty"><p>No locations found.</p></div>';
