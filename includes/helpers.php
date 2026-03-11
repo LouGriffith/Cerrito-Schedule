@@ -490,15 +490,14 @@ function cerrito_render_event_group_compact( array $group, $is_recurring ) {
             if ( ! $location ) continue;
         ?>
             <div class="cerrito-compact-row">
-                <span class="cerrito-compact-time">
-                    <?php echo $event_time ? esc_html( $event_time ) : ''; ?>
-                </span>
-                <span class="cerrito-compact-arrow">→</span>
                 <span class="cerrito-compact-venue">
                     <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
                         <?php echo esc_html( $location->post_title ); ?>
                     </a>
                 </span>
+                <?php if ( $event_time ) : ?>
+                    <span class="cerrito-compact-time"><?php echo esc_html( $event_time ); ?></span>
+                <?php endif; ?>
             </div>
         <?php endforeach; ?>
 
