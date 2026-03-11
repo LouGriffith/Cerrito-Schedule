@@ -715,7 +715,7 @@
 .cerrito-compact-row {
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    justify-content: space-between;
     padding: 3px 0 3px 18px;
     font-size: 0.97em;
     line-height: 1.4;
@@ -723,20 +723,20 @@
 
 .cerrito-compact-time {
     color: #555;
-    min-width: 55px;
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
+    text-align: right;
+    padding-left: 12px;
 }
 
 .cerrito-compact-arrow {
-    color: #aaa;
-    flex-shrink: 0;
+    display: none;
 }
 
-/* Venue name — right-aligned to match existing design convention */
+/* Venue name — left side */
 .cerrito-compact-row .cerrito-compact-venue {
     flex: 1;
-    text-align: right;
+    text-align: left;
     padding-left: 0;
     margin-bottom: 0;
 }

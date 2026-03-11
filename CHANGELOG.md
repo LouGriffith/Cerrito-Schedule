@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.8.0] - 2026-03-11
+
+### Changed
+- `[cerrito_locations]` now sorts locations letters-first (A–Z), with number-prefixed
+  venue names appearing after all alphabetical entries (e.g. Ale House, Barley's … 1 Stop Bar)
+
+---
+
+## [6.7.0] - 2026-03-11
+
+### Added
+- Skip Dates support for recurring events — add an ACF repeater field `skip_dates`
+  (sub-field `skip_date`, Date Picker, return format `Y-m-d`) to the Event post type to
+  cancel individual occurrences without unpublishing the event
+- Cancelled occurrences are suppressed across all shortcodes: `[cerrito_today]`,
+  `[cerrito_recurring_schedule]`, `[cerrito_master_schedule]`, and `[cerrito_locations]`
+- `cerrito_is_skipped_on( $post_id, $date )` helper in `helpers.php`
+- `cerrito_next_date_for_day( $day_name )` helper — returns the next calendar date
+  (WordPress timezone) for a given weekday name
+
+### Fixed
+- `[cerrito_today]` compact header now displays full date format:
+  "Tuesday, March 10, 2026" (was "Tuesday Mar 10")
+
+---
+
 ## [6.6.0] - 2026-03-10
 
 ### Added
