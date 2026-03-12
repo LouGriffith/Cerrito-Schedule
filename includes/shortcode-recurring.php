@@ -67,10 +67,6 @@ function cerrito_recurring_schedule_shortcode( array $atts ) {
             if ( $when_terms && ! is_wp_error( $when_terms ) ) {
                 foreach ( $when_terms as $when_term ) {
                     $day        = $when_term->name;
-
-                    // Skip if this occurrence is cancelled for the next date it falls on
-                    if ( cerrito_is_skipped_on( $event->ID, cerrito_next_date_for_day( $day ) ) ) continue;
-
                     $event_type = cerrito_get_event_type_string( $event->ID );
 
                     $special_theme = get_field( 'special_theme', $event->ID );
@@ -123,7 +119,7 @@ function cerrito_recurring_schedule_shortcode( array $atts ) {
                         </div>
 
                         <?php foreach ( $group['events'] as $event ) :
-                            cerrito_render_location_card( $event, $group['class'] );
+                            cerrito_render_location_card( $event, $group['class'], cerrito_next_date_for_day_from_event( $event ) );
                         endforeach; ?>
                     </div>
                     <?php

@@ -43,10 +43,6 @@ function cerrito_today_schedule_shortcode( array $atts ) {
                     if ( $t->name === $today ) { $include = true; break; }
                 }
             }
-            // Suppress if this occurrence is skipped on today's date
-            if ( $include && cerrito_is_skipped_on( $event->ID, $today_date ) ) {
-                $include = false;
-            }
         } else {
             $include = ( cerrito_normalise_date( get_field( 'event_date', $event->ID ) ) === $today_date );
         }
@@ -124,15 +120,20 @@ function cerrito_today_render_compact( array $groups ) {
             </div>
 
             <?php foreach ( $group['events'] as $event ) :
-                $event_time = get_field( 'event_time', $event->ID );
-                $location   = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
+                $event_time    = get_field( 'event_time', $event->ID );
+                $location      = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
                 if ( ! $location ) continue;
+                $cancel_reason = cerrito_get_skip_reason( $event->ID, $today_date );
+                $is_cancelled  = $cancel_reason !== '';
+                if ( $is_cancelled && $cancel_reason === '' ) $cancel_reason = 'Cancelled today';
             ?>
-                <div class="cerrito-compact-venue">
+                <div class="cerrito-compact-venue<?php echo $is_cancelled ? ' cerrito-compact-venue--cancelled' : ''; ?>">
                     <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
                         <?php echo esc_html( $location->post_title ); ?>
                     </a>
-                    <?php if ( $event_time ) : ?>
+                    <?php if ( $is_cancelled ) : ?>
+                        <span class="cerrito-compact-cancel-reason"><?php echo esc_html( $cancel_reason ?: 'Cancelled today' ); ?></span>
+                    <?php elseif ( $event_time ) : ?>
                         → <?php echo esc_html( $event_time ); ?>
                     <?php endif; ?>
                 </div>
@@ -172,7 +173,7 @@ function cerrito_today_render_full( array $groups, array $atts ) {
             <?php endif; ?>
 
             <?php foreach ( $group['events'] as $event ) :
-                cerrito_render_location_card( $event, $group['class'] );
+                cerrito_render_location_card( $event, $group['class'], $today_date );
             endforeach; ?>
         </div>
         <?php

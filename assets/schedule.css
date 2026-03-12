@@ -751,6 +751,47 @@
     text-decoration: underline;
 }
 
+/* Cancelled occurrence — struck-through venue, muted time, reason note */
+.cerrito-compact-row--cancelled {
+    opacity: 0.6;
+}
+
+.cerrito-compact-row--cancelled .cerrito-compact-venue a {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.cerrito-compact-row--cancelled .cerrito-compact-time {
+    text-decoration: line-through;
+    color: #aaa;
+}
+
+.cerrito-compact-cancel-reason {
+    display: inline;
+    font-size: 0.85em;
+    font-style: italic;
+    color: #c0392b;
+    text-decoration: none;
+}
+
+/* Cancel reason in full location cards */
+.cerrito-cancel-reason {
+    display: inline;
+    font-size: 0.85em;
+    font-style: italic;
+    color: #c0392b;
+    margin-left: 6px;
+}
+
+.cerrito-location-card--cancelled {
+    opacity: 0.6;
+}
+
+.cerrito-location-card--cancelled .cerrito-location-name a {
+    text-decoration: line-through;
+    color: #888;
+}
+
 /* Theme / date badges inside compact type label */
 .cerrito-compact-type .cerrito-theme-badge {
     font-weight: 400;
