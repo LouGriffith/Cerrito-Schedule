@@ -329,29 +329,46 @@ function cerrito_sort_events_by_time( array $events ) {
 // ── Skip-date helpers ─────────────────────────────────────────────────────────
 
 /**
- * Check whether a recurring event has been marked as skipped on a specific date.
+ * Return the cancellation reason for a recurring event on a specific date,
+ * or an empty string if the event is not cancelled on that date.
  *
- * Uses the ACF repeater field `skip_dates` (sub-field `skip_date`, Date Picker).
- * Returns true if $date appears in the repeater, false otherwise.
+ * Uses the ACF repeater field `skip_dates` with sub-fields:
+ *   skip_date   — Date Picker (return format Y-m-d)
+ *   skip_reason — Text (optional public-facing reason)
  *
  * ACF setup required:
  *   Field group : Events
  *   Field label : Skip Dates
  *   Field name  : skip_dates          (Repeater)
- *   Sub-field   : skip_date           (Date Picker — return format Y-m-d)
+ *   Sub-fields  : skip_date           (Date Picker — return format Y-m-d)
+ *                 skip_reason         (Text — optional)
  *
  * @param int    $post_id  Event post ID
  * @param string $date     Y-m-d date to check
+ * @return string  Cancellation reason, or '' if not cancelled
+ */
+function cerrito_get_skip_reason( $post_id, $date ) {
+    $rows = get_field( 'skip_dates', $post_id );
+    if ( empty( $rows ) || ! is_array( $rows ) ) return '';
+    foreach ( $rows as $row ) {
+        $skip = cerrito_normalise_date( (string) ( $row['skip_date'] ?? '' ) );
+        if ( $skip === $date ) {
+            return (string) ( $row['skip_reason'] ?? '' );
+        }
+    }
+    return '';
+}
+
+/**
+ * Check whether a recurring event has been marked as skipped on a specific date.
+ * Convenience wrapper around cerrito_get_skip_reason().
+ *
+ * @param int    $post_id
+ * @param string $date     Y-m-d
  * @return bool
  */
 function cerrito_is_skipped_on( $post_id, $date ) {
-    $rows = get_field( 'skip_dates', $post_id );
-    if ( empty( $rows ) || ! is_array( $rows ) ) return false;
-    foreach ( $rows as $row ) {
-        $skip = cerrito_normalise_date( (string) ( $row['skip_date'] ?? '' ) );
-        if ( $skip === $date ) return true;
-    }
-    return false;
+    return cerrito_get_skip_reason( $post_id, $date ) !== '';
 }
 
 /**
@@ -370,6 +387,19 @@ function cerrito_next_date_for_day( $day_name ) {
     $target   = $day_map[ $day_name ] ?? 1;
     $diff     = ( $target - $today + 7 ) % 7;
     return wp_date( 'Y-m-d', strtotime( "+{$diff} days" ) );
+}
+
+/**
+ * Get the next occurrence date for a recurring event based on its first `when` term.
+ * Returns '' if no when term is found.
+ *
+ * @param WP_Post $event
+ * @return string Y-m-d or ''
+ */
+function cerrito_next_date_for_day_from_event( $event ) {
+    $when_terms = get_the_terms( $event->ID, 'when' );
+    if ( ! $when_terms || is_wp_error( $when_terms ) ) return '';
+    return cerrito_next_date_for_day( $when_terms[0]->name );
 }
 
 // ── Render helpers ────────────────────────────────────────────────────────────
@@ -445,7 +475,10 @@ function cerrito_render_event_group( array $group, $is_recurring, $show_game_log
         <?php endif; ?>
 
         <?php foreach ( $group['events'] as $event ) :
-            cerrito_render_location_card( $event, $group['class'] );
+            $check_date = $is_recurring
+                ? cerrito_next_date_for_day_from_event( $event )
+                : ( cerrito_normalise_date( get_field( 'event_date', $event->ID ) ) ?: '' );
+            cerrito_render_location_card( $event, $group['class'], $check_date );
         endforeach; ?>
 
     </div>
@@ -485,15 +518,18 @@ function cerrito_render_event_group_compact( array $group, $is_recurring ) {
         </div>
 
         <?php foreach ( $group['events'] as $event ) :
-            $event_time = get_field( 'event_time', $event->ID );
-            $location   = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
+            $event_time      = get_field( 'event_time', $event->ID );
+            $location        = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
             if ( ! $location ) continue;
+            $cancel_date     = $is_recurring ? cerrito_next_date_for_day_from_event( $event ) : '';
+            $cancel_reason   = $cancel_date ? cerrito_get_skip_reason( $event->ID, $cancel_date ) : '';
+            $is_cancelled    = $cancel_reason !== '';
         ?>
-            <div class="cerrito-compact-row">
+            <div class="cerrito-compact-row<?php echo $is_cancelled ? ' cerrito-compact-row--cancelled' : ''; ?>">
                 <span class="cerrito-compact-venue">
                     <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
                         <?php echo esc_html( $location->post_title ); ?>
-                    </a>
+                    </a><?php if ( $is_cancelled ) : ?><span class="cerrito-compact-cancel-reason"> — <?php echo esc_html( $cancel_reason ?: 'Cancelled this week' ); ?></span><?php endif; ?>
                 </span>
                 <?php if ( $event_time ) : ?>
                     <span class="cerrito-compact-time"><?php echo esc_html( $event_time ); ?></span>
@@ -536,8 +572,10 @@ function cerrito_render_occurrence_title( $emoji, $type, $theme, $date = '' ) {
  *
  * @param WP_Post $event
  * @param string  $event_class
+ * @param string  $check_date   Optional Y-m-d — if provided and event is cancelled on
+ *                              this date, the card renders struck-through with the reason
  */
-function cerrito_render_location_card( $event, $event_class ) {
+function cerrito_render_location_card( $event, $event_class, $check_date = '' ) {
     $event_time      = get_field( 'event_time',      $event->ID );
     $location        = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
     $age_restriction = get_field( 'age_restriction', $event->ID );
@@ -545,10 +583,14 @@ function cerrito_render_location_card( $event, $event_class ) {
 
     if ( ! $location ) return;
 
+    $cancel_reason = $check_date ? cerrito_get_skip_reason( $event->ID, $check_date ) : '';
+    $is_cancelled  = $cancel_reason !== '';
+    $card_class    = trim( 'cerrito-location-card ' . $event_class . ( $is_cancelled ? ' cerrito-location-card--cancelled' : '' ) );
+
     $location_logo    = cerrito_get_location_logo( $location->ID );
     $location_address = cerrito_get_location_address( $location->ID );
     ?>
-    <div class="cerrito-location-card <?php echo esc_attr( $event_class ); ?>">
+    <div class="<?php echo esc_attr( $card_class ); ?>">
         <div class="cerrito-location-logo">
             <?php if ( $location_logo ) : ?>
                 <img src="<?php echo esc_url( $location_logo ); ?>" alt="<?php echo esc_attr( $location->post_title ); ?>">
@@ -559,6 +601,9 @@ function cerrito_render_location_card( $event, $event_class ) {
                 <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
                     <?php echo esc_html( $location->post_title ); ?>
                 </a>
+                <?php if ( $is_cancelled ) : ?>
+                    <span class="cerrito-cancel-reason"><?php echo esc_html( $cancel_reason ?: 'Cancelled this week' ); ?></span>
+                <?php endif; ?>
             </div>
             <?php if ( $event_time ) : ?>
                 <div class="cerrito-location-time">🕐 <?php echo esc_html( $event_time ); ?></div>

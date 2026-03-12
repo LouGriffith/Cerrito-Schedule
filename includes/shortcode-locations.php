@@ -186,9 +186,6 @@ function cerrito_locations_shortcode( array $atts ) {
                         : [ '__none__' ];
 
                     foreach ( $days as $day ) {
-                        // Skip if this occurrence is cancelled for the next date it falls on
-                        if ( $day !== '__none__' && cerrito_is_skipped_on( $event->ID, cerrito_next_date_for_day( $day ) ) ) continue;
-
                         if ( ! isset( $by_day[ $day ][ $group_key ] ) ) {
                             $by_day[ $day ][ $group_key ] = [
                                 'type'   => $event_type,

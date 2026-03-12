@@ -6,6 +6,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.11.0] - 2026-03-12
+
+### Changed
+- Cancellation reason now appears **inline** on the same row as the struck-through venue
+  name (e.g. "Ghost River Brewing — Private event this week"), rather than on a second line
+- Cancelled events now show in **all** shortcodes including `[cerrito_today]` — previously
+  today's widget suppressed them entirely
+- Full location cards (`[cerrito_today]` full style, `[cerrito_master_schedule]`,
+  `[cerrito_recurring_schedule]`) also render cancelled events struck-through with the
+  inline reason next to the venue name
+- `cerrito_render_location_card()` now accepts an optional `$check_date` parameter;
+  callers pass the relevant date so cancellation can be detected per-render
+
+---
+
+## [6.10.0] - 2026-03-12
+
+### Changed
+- Cancelled recurring occurrences now display as struck-through instead of being hidden,
+  so customers can see that an event exists but is not running this week
+- Added optional `skip_reason` text sub-field to the `skip_dates` ACF repeater —
+  add a public-facing message (e.g. "Private event this week") that appears below
+  the struck-through venue name in italic red; falls back to "Cancelled this week"
+  if the field is left blank
+- `[cerrito_today]` continues to suppress cancelled events entirely (no strike-through)
+- Added `cerrito_get_skip_reason( $post_id, $date )` helper returning the reason string
+  (or `''` if not cancelled); `cerrito_is_skipped_on()` remains as a boolean wrapper
+- Added `cerrito_next_date_for_day_from_event( $event )` helper for use inside renderers
+
+### ACF update required
+- Add sub-field to the `skip_dates` repeater:
+  Label: `Cancellation Reason` · Name: `skip_reason` · Type: Text (optional)
+
+---
+
+## [6.9.0] - 2026-03-11
+
+### Changed
+- Compact schedule rows now show venue name on the left and time on the right,
+  using `space-between` to fill the full row width
+- Arrow separator (`→`) removed from compact rows
+- Time no longer has a fixed minimum width; sits flush right
+
+---
+
 ## [6.8.0] - 2026-03-11
 
 ### Changed
