@@ -113,7 +113,37 @@ function cerrito_get_game_description( $type_name ) {
 }
 
 /**
- * Derive a CSS class ('trivia', 'bingo', or '') from a game type name string.
+ * Get the brand color for a game type by name.
+ * Returns a hex color string (e.g. '#ff6b6b') or '' if not set.
+ *
+ * ACF setup required:
+ *   Field group : Game Types (taxonomy)
+ *   Field label : Game Color
+ *   Field name  : game_color   (Color Picker)
+ *   Default     : #0066cc
+ *
+ * @param string $type_name
+ * @return string  Hex color or ''
+ */
+function cerrito_get_game_color( $type_name ) {
+    $term = cerrito_get_game_type_term( $type_name );
+    if ( ! $term ) return '';
+    $color = get_field( 'game_color', 'game_type_' . $term->term_id );
+    return ( $color && preg_match( '/^#[0-9a-fA-F]{3,6}$/', $color ) ) ? $color : '';
+}
+
+/**
+ * Return an inline style string for a game type color, or '' if none set.
+ * Pass $property to control which CSS property is set (e.g. 'color', 'border-left-color').
+ *
+ * @param string $type_name
+ * @param string $property   CSS property name
+ * @return string  e.g. ' style="color:#e91e63"' or ''
+ */
+function cerrito_game_color_style( $type_name, $property = 'color' ) {
+    $color = cerrito_get_game_color( $type_name );
+    return $color ? ' style="' . esc_attr( $property . ':' . $color ) . '"' : '';
+}
  *
  * @param string $event_type
  * @return string
@@ -501,10 +531,11 @@ function cerrito_render_event_group_compact( array $group, $is_recurring ) {
     $game_emoji  = cerrito_get_game_emoji( $group['type'] );
     $show_date   = ( ! $is_recurring && isset( $group['show_date'] ) ) ? $group['show_date'] : '';
     $themed_attr = ! empty( $group['theme'] ) ? ' data-themed="1"' : '';
+    $color_style = cerrito_game_color_style( $group['type'], 'color' );
     ?>
     <div class="cerrito-event-group cerrito-event-group--compact"<?php echo $themed_attr; ?>>
 
-        <div class="cerrito-compact-type <?php echo esc_attr( $group['class'] ); ?>">
+        <div class="cerrito-compact-type <?php echo esc_attr( $group['class'] ); ?>"<?php echo $color_style; ?>>
             <?php if ( $game_emoji ) : ?>
                 <span class="cerrito-game-emoji"><?php echo esc_html( $game_emoji ); ?></span>
             <?php endif; ?>
@@ -551,12 +582,13 @@ function cerrito_render_event_group_compact( array $group, $is_recurring ) {
  * @param string $date
  */
 function cerrito_render_occurrence_title( $emoji, $type, $theme, $date = '' ) {
+    $color_style = cerrito_game_color_style( $type, 'color' );
     ?>
     <div class="cerrito-occurrence-title">
         <?php if ( $emoji ) : ?>
             <span class="cerrito-game-emoji"><?php echo esc_html( $emoji ); ?></span>
         <?php endif; ?>
-        <?php echo esc_html( $type ); ?>
+        <span class="cerrito-occurrence-type"<?php echo $color_style; ?>><?php echo esc_html( $type ); ?></span>
         <?php if ( $theme ) : ?>
             <span class="cerrito-theme-badge">Theme Rounds</span>
         <?php endif; ?>
@@ -585,12 +617,14 @@ function cerrito_render_location_card( $event, $event_class, $check_date = '' ) 
 
     $cancel_reason = $check_date ? cerrito_get_skip_reason( $event->ID, $check_date ) : '';
     $is_cancelled  = $cancel_reason !== '';
+    $event_type    = cerrito_get_event_type_string( $event->ID );
+    $border_style  = cerrito_game_color_style( $event_type, 'border-left-color' );
     $card_class    = trim( 'cerrito-location-card ' . $event_class . ( $is_cancelled ? ' cerrito-location-card--cancelled' : '' ) );
 
     $location_logo    = cerrito_get_location_logo( $location->ID );
     $location_address = cerrito_get_location_address( $location->ID );
     ?>
-    <div class="<?php echo esc_attr( $card_class ); ?>">
+    <div class="<?php echo esc_attr( $card_class ); ?>"<?php echo $border_style; ?>>
         <div class="cerrito-location-logo">
             <?php if ( $location_logo ) : ?>
                 <img src="<?php echo esc_url( $location_logo ); ?>" alt="<?php echo esc_attr( $location->post_title ); ?>">

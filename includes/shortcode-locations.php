@@ -274,10 +274,12 @@ add_shortcode( 'cerrito_locations', 'cerrito_locations_shortcode' );
 function cerrito_render_location_event_row( array $group, $coming_soon = false ) {
     ob_start();
 
-    $game_emoji = cerrito_get_game_emoji( $group['type'] );
+    $game_emoji   = cerrito_get_game_emoji( $group['type'] );
+    $color_style  = cerrito_game_color_style( $group['type'], 'color' );
+    $border_style = cerrito_game_color_style( $group['type'], 'border-left-color' );
     ?>
-    <div class="cerrito-location-entry__event-row <?php echo esc_attr( $group['class'] ); ?>">
-        <span class="cerrito-location-entry__event-type">
+    <div class="cerrito-location-entry__event-row <?php echo esc_attr( $group['class'] ); ?>"<?php echo $border_style; ?>>
+        <span class="cerrito-location-entry__event-type"<?php echo $color_style; ?>>
             <?php if ( $game_emoji ) : ?>
                 <span class="cerrito-game-emoji"><?php echo esc_html( $game_emoji ); ?></span>
             <?php endif; ?>
