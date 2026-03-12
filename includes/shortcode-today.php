@@ -86,9 +86,9 @@ function cerrito_today_schedule_shortcode( array $atts ) {
     // ── Events ────────────────────────────────────────────────────────────────
     if ( ! empty( $today_groups ) ) {
         if ( $atts['style'] === 'compact' ) {
-            cerrito_today_render_compact( $today_groups );
+            cerrito_today_render_compact( $today_groups, $today_date );
         } else {
-            cerrito_today_render_full( $today_groups, $atts );
+            cerrito_today_render_full( $today_groups, $atts, $today_date );
         }
     } else {
         echo '<div class="cerrito-today-empty"><p>No events scheduled for today. Check back tomorrow!</p></div>';
@@ -104,7 +104,7 @@ add_shortcode( 'cerrito_today', 'cerrito_today_schedule_shortcode' );
 /**
  * @param array $groups
  */
-function cerrito_today_render_compact( array $groups ) {
+function cerrito_today_render_compact( array $groups, $today_date ) {
     foreach ( $groups as $group ) :
         $game_emoji = cerrito_get_game_emoji( $group['type'] );
         ?>
@@ -147,7 +147,7 @@ function cerrito_today_render_compact( array $groups ) {
  * @param array $groups
  * @param array $atts
  */
-function cerrito_today_render_full( array $groups, array $atts ) {
+function cerrito_today_render_full( array $groups, array $atts, $today_date ) {
     foreach ( $groups as $group ) :
         $game_emoji       = cerrito_get_game_emoji( $group['type'] );
         $game_logo        = ( $atts['show_game_logo']        === 'yes' ) ? cerrito_get_game_logo( $group['type'] )        : '';
