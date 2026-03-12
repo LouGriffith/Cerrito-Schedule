@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.12.0] - 2026-03-12
+
+### Added
+- Game type color picker — add a `game_color` Color Picker ACF field to the `game_type`
+  taxonomy to set a custom brand color per game type
+- Color is applied inline via `style=` attributes so it works without CSS changes:
+  - **Compact schedule** — game type label text color
+  - **Full schedule** — occurrence title type name text color
+  - **Location cards** — left border accent color (replaces hardcoded red/teal)
+  - **Location directory** — event row type label text and left border
+- `cerrito_get_game_color( $type_name )` helper — returns hex color or `''`
+- `cerrito_game_color_style( $type_name, $property )` helper — returns inline `style=`
+  attribute string for any CSS property; falls back gracefully to CSS class colors if
+  the ACF field is not set
+
+### ACF setup required
+- Add field to **Game Types** taxonomy field group:
+  Label: `Game Color` · Name: `game_color` · Type: **Color Picker** · Default value: `#0066cc`
+
+---
+
 ## [6.11.1] - 2026-03-12
 
 ### Fixed
