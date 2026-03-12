@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.11.1] - 2026-03-12
+
+### Fixed
+- PHP warning "Undefined variable $today_date" in `shortcode-today.php` — `$today_date`
+  was defined in the shortcode function scope but not passed to the `cerrito_today_render_compact()`
+  and `cerrito_today_render_full()` sub-functions; both now receive it as an explicit parameter
+
+---
+
 ## [6.11.0] - 2026-03-12
 
 ### Changed
