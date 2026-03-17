@@ -119,8 +119,22 @@ function cerrito_schedule_shortcode( array $atts ) {
                             <span class="cerrito-game-emoji"><?php echo esc_html( $game_emoji ); ?></span>
                         <?php endif; ?>
                         <?php echo esc_html( $group['type'] ); ?>
-                        <?php if ( $group['theme'] ) : ?>
-                            <span class="cerrito-event-theme"><?php echo esc_html( $group['theme'] ); ?></span>
+                        <?php if ( $group['theme'] ) :
+                            // Resolve theme emoji from the game-theme taxonomy term
+                            $theme_name_clean = preg_replace( '/\s*\([^)]*\)$/', '', $group['theme'] );
+                            $theme_term = get_term_by( 'name', $theme_name_clean, 'game-theme' )
+                                       ?: get_term_by( 'slug', sanitize_title( $theme_name_clean ), 'game-theme' );
+                            $theme_emoji_char = '';
+                            if ( $theme_term && ! is_wp_error( $theme_term ) ) {
+                                $theme_emoji_char = (string) get_field( 'theme_emoji', 'game-theme_' . $theme_term->term_id );
+                            }
+                        ?>
+                            <span class="cerrito-theme-inline">
+                                <?php if ( $theme_emoji_char ) : ?>
+                                    <?php echo esc_html( $theme_emoji_char ); ?>
+                                <?php endif; ?>
+                                <?php echo esc_html( $group['theme'] ); ?>
+                            </span>
                         <?php endif; ?>
                     </div>
 
@@ -133,7 +147,7 @@ function cerrito_schedule_shortcode( array $atts ) {
                                     <?php echo esc_html( $location->post_title ); ?>
                                 </a>
                                 <?php if ( $event_time ) : ?>
-                                    -> <span class="cerrito-event-time"><?php echo esc_html( $event_time ); ?></span>
+                                    ➜ <span class="cerrito-event-time"><?php echo esc_html( $event_time ); ?></span>
                                 <?php endif; ?>
                             </div>
                         <?php endif;

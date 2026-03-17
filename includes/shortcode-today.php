@@ -134,7 +134,7 @@ function cerrito_today_render_compact( array $groups, $today_date ) {
                     <?php if ( $is_cancelled ) : ?>
                         <span class="cerrito-compact-cancel-reason"><?php echo esc_html( $cancel_reason ?: 'Cancelled today' ); ?></span>
                     <?php elseif ( $event_time ) : ?>
-                        -> <?php echo esc_html( $event_time ); ?>
+                    ➜ <?php echo esc_html( $event_time ); ?>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>

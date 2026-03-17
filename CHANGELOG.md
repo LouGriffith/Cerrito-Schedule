@@ -16,6 +16,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [6.15.0] - 2026-03-17
+
+### Changed
+- `[cerrito_schedule]` — themed events now display the theme emoji + name inline
+  (e.g. 🏰 Disney Night on 3/18) instead of a generic "Theme Rounds" badge,
+  matching the compact schedule style
+- `[cerrito_schedule]` — venue row arrow changed from `->` to `➜`
+- `[cerrito_today]` compact style — venue row arrow changed from `->` to `➜`
+
+---
+
 ## [6.14.0] - 2026-03-17
 
 ### Added
