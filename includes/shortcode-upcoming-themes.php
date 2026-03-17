@@ -98,7 +98,7 @@ function cerrito_upcoming_themes_list_shortcode( array $atts ) {
                                 <div class="cerrito-themes-location">
                                     <?php if ( $loc['time'] ) : ?>
                                         <span class="cerrito-themes-time"><?php echo esc_html( $loc['time'] ); ?></span>
-                                        <span class="cerrito-themes-arrow">→</span>
+                                        <span class="cerrito-themes-arrow">-></span>
                                     <?php endif; ?>
                                     <span class="cerrito-themes-location-name">
                                         <a href="<?php echo esc_url( $loc['url'] ); ?>">

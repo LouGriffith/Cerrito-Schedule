@@ -815,3 +815,97 @@
         text-align: left;
     }
 }
+/* ── [cerrito_game_type_schedule] ────────────────────────────────────────────
+   Paste these rules into assets/schedule.css
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.cerrito-gt-schedule {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* One block per game type */
+.cerrito-gt-block {
+    margin-bottom: 40px;
+}
+
+/* Colored header bar matching event type */
+.cerrito-gt-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #333;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.cerrito-gt-header--trivia { background: #ff6b6b; }
+.cerrito-gt-header--bingo  { background: #4ecdc4; }
+
+.cerrito-gt-logo {
+    max-height: 40px;
+    width: auto;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.cerrito-gt-title {
+    font-size: 1.15em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.cerrito-gt-description {
+    color: #555;
+    font-size: 0.93em;
+    margin: 0 0 10px 0;
+    line-height: 1.5;
+}
+
+/* "Every Monday" / "Mar 21 (Friday)" labels */
+.cerrito-gt-day-label {
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #888;
+    letter-spacing: 0.05em;
+    margin: 12px 0 4px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Individual location row */
+.cerrito-gt-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.cerrito-gt-row:last-child {
+    border-bottom: none;
+}
+
+.cerrito-gt-location-name {
+    flex: 1;
+    font-weight: 500;
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 1em;
+}
+
+.cerrito-gt-location-name:hover {
+    text-decoration: underline;
+}
+
+.cerrito-gt-time {
+    font-size: 0.95em;
+    color: #555;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+/* Reuse existing .cerrito-theme-badge for inline theme label */

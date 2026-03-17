@@ -1,16 +1,12 @@
 <?php
 /**
- * Plugin Name: Cerrito Events Admin Columns
- * Plugin URI:  https://github.com/lougriffith/cerrito-events-admin
- * Description: Add custom columns and filters to Events admin list
- * Version:     1.0
- * Author:      Lou Griffith
- * Author URI:  https://lougriffith.com
+ * Admin Columns and Filters for Events
+ * Loaded by cerrito-schedule.php -- not a standalone plugin.
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// ── Custom columns ────────────────────────────────────────────────────────────
+// -- Custom columns ------------------------------------------------------------
 
 function cerrito_event_columns( $columns ) {
     unset( $columns['date'] );
@@ -23,7 +19,7 @@ function cerrito_event_columns( $columns ) {
 }
 add_filter( 'manage_event_posts_columns', 'cerrito_event_columns' );
 
-// ── Populate columns ──────────────────────────────────────────────────────────
+// -- Populate columns ----------------------------------------------------------
 
 function cerrito_event_column_content( $column, $post_id ) {
     switch ( $column ) {
@@ -39,13 +35,13 @@ function cerrito_event_column_content( $column, $post_id ) {
                 $d = DateTime::createFromFormat( 'Y-m-d', $date );
                 echo $d ? esc_html( $d->format( 'M j, Y' ) ) : esc_html( $date );
             } else {
-                echo '—';
+                echo '--';
             }
             break;
 
         case 'event_time':
             $time = get_field( 'event_time', $post_id );
-            echo $time ? esc_html( $time ) : '—';
+            echo $time ? esc_html( $time ) : '--';
             break;
 
         case 'event_location':
@@ -54,21 +50,21 @@ function cerrito_event_column_content( $column, $post_id ) {
             if ( $location && is_object( $location ) ) {
                 echo '<a href="' . get_edit_post_link( $location->ID ) . '">' . esc_html( $location->post_title ) . '</a>';
             } else {
-                echo '—';
+                echo '--';
             }
             break;
 
         case 'is_recurring':
             $recurring = get_field( 'is_recurring', $post_id );
             if ( $recurring ) {
-                echo '✓ Yes';
+                echo 'Yes Yes';
                 $when_terms = get_the_terms( $post_id, 'when' );
                 if ( $when_terms && ! is_wp_error( $when_terms ) ) {
                     $days = wp_list_pluck( $when_terms, 'name' );
                     echo '<br><small>' . esc_html( implode( ', ', $days ) ) . '</small>';
                 }
             } else {
-                echo '—';
+                echo '--';
             }
             break;
 
@@ -81,14 +77,14 @@ function cerrito_event_column_content( $column, $post_id ) {
                 }
                 echo implode( ', ', $links );
             } else {
-                echo '—';
+                echo '--';
             }
             break;
     }
 }
 add_action( 'manage_event_posts_custom_column', 'cerrito_event_column_content', 10, 2 );
 
-// ── Sortable columns ──────────────────────────────────────────────────────────
+// -- Sortable columns ----------------------------------------------------------
 
 function cerrito_event_sortable_columns( $columns ) {
     $columns['event_date']     = 'event_date';
@@ -99,7 +95,7 @@ function cerrito_event_sortable_columns( $columns ) {
 }
 add_filter( 'manage_edit-event_sortable_columns', 'cerrito_event_sortable_columns' );
 
-// ── Sort handler ──────────────────────────────────────────────────────────────
+// -- Sort handler --------------------------------------------------------------
 
 function cerrito_event_orderby( $query ) {
     if ( ! is_admin() || ! $query->is_main_query() ) return;
@@ -112,7 +108,7 @@ function cerrito_event_orderby( $query ) {
 }
 add_action( 'pre_get_posts', 'cerrito_event_orderby' );
 
-// ── Filter dropdowns ──────────────────────────────────────────────────────────
+// -- Filter dropdowns ----------------------------------------------------------
 
 function cerrito_event_filters() {
     global $typenow;
@@ -139,7 +135,7 @@ function cerrito_event_filters() {
 }
 add_action( 'restrict_manage_posts', 'cerrito_event_filters' );
 
-// ── Apply filters to query ────────────────────────────────────────────────────
+// -- Apply filters to query ----------------------------------------------------
 
 function cerrito_event_filter_query( $query ) {
     global $pagenow, $typenow;

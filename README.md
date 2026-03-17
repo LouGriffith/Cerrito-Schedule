@@ -28,6 +28,7 @@ WordPress auto-updates work automatically — once installed from the release ZI
 | `[cerrito_themed_rounds]` | Upcoming events with special themes |
 | `[cerrito_upcoming_themes_list]` | Themed dates from game type term meta |
 | `[cerrito_locations]` | Location directory with nested events |
+| `[cerrito_game_type_schedule]` | Game type header with all locations/times listed beneath |
 
 ## Requirements
 

@@ -6,8 +6,8 @@
  *
  * Parameters:
  *   style                 string  'full' (default) or 'compact'
- *   show_game_logo        string  'yes'|'no' — full style only
- *   show_game_description string  'yes'|'no' — full style only
+ *   show_game_logo        string  'yes'|'no' -- full style only
+ *   show_game_description string  'yes'|'no' -- full style only
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -73,7 +73,7 @@ function cerrito_today_schedule_shortcode( array $atts ) {
     $wrapper_class = 'cerrito-today-schedule' . ( $atts['style'] === 'compact' ? ' compact' : '' );
     echo '<div class="' . esc_attr( $wrapper_class ) . '">';
 
-    // ── Header ────────────────────────────────────────────────────────────────
+    // -- Header ----------------------------------------------------------------
     echo '<div class="cerrito-today-header">';
     if ( $atts['style'] === 'compact' ) {
         echo '<h2>' . esc_html( wp_date( 'l, F j, Y' ) ) . '</h2>';
@@ -83,7 +83,7 @@ function cerrito_today_schedule_shortcode( array $atts ) {
     }
     echo '</div>';
 
-    // ── Events ────────────────────────────────────────────────────────────────
+    // -- Events ----------------------------------------------------------------
     if ( ! empty( $today_groups ) ) {
         if ( $atts['style'] === 'compact' ) {
             cerrito_today_render_compact( $today_groups, $today_date );
@@ -99,7 +99,7 @@ function cerrito_today_schedule_shortcode( array $atts ) {
 }
 add_shortcode( 'cerrito_today', 'cerrito_today_schedule_shortcode' );
 
-// ── Style-specific renderers ──────────────────────────────────────────────────
+// -- Style-specific renderers --------------------------------------------------
 
 /**
  * @param array $groups
@@ -134,7 +134,7 @@ function cerrito_today_render_compact( array $groups, $today_date ) {
                     <?php if ( $is_cancelled ) : ?>
                         <span class="cerrito-compact-cancel-reason"><?php echo esc_html( $cancel_reason ?: 'Cancelled today' ); ?></span>
                     <?php elseif ( $event_time ) : ?>
-                        → <?php echo esc_html( $event_time ); ?>
+                        -> <?php echo esc_html( $event_time ); ?>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>

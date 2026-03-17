@@ -8,7 +8,7 @@
  *   location   string  Location slug or ID (auto-detected on single location pages)
  *   game_type  string  Filter by game type slug or name
  *   display    string  'full' (default) | 'compact'
- *                      compact = no venue cards; shows time → venue name inline
+ *                      compact = no venue cards; shows time -> venue name inline
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -173,7 +173,7 @@ function cerrito_render_coming_soon_compact( $event ) {
         </div>
         <div class="cerrito-compact-row">
             <span class="cerrito-compact-time">TBA</span>
-            <span class="cerrito-compact-arrow">→</span>
+            <span class="cerrito-compact-arrow">-></span>
             <span class="cerrito-compact-venue">
                 <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
                     <?php echo esc_html( $location->post_title ); ?>
@@ -225,9 +225,9 @@ function cerrito_render_coming_soon_card( $event ) {
                         <?php echo esc_html( $location->post_title ); ?>
                     </a>
                 </div>
-                <div class="cerrito-location-time">🕐 TBA</div>
+                <div class="cerrito-location-time">&#x1F550; TBA</div>
                 <?php if ( $location_address ) : ?>
-                    <div class="cerrito-location-address">📍 <?php echo esc_html( cerrito_flatten_address( $location_address ) ); ?></div>
+                    <div class="cerrito-location-address">&#x1F4CD; <?php echo esc_html( cerrito_flatten_address( $location_address ) ); ?></div>
                 <?php endif; ?>
                 <?php if ( $age_restriction ) : ?>
                     <div class="cerrito-location-badges">
