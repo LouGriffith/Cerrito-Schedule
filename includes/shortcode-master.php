@@ -6,14 +6,14 @@
  *
  * Parameters:
  *   location              string  Location slug or ID (auto-detected on single location pages)
- *   game_type             string  Filter by game type slug or name
+ *   game_type             string  Filter by game type slug or name; comma-separated for multiple, e.g. "music-bingo,trivia"
  *   days_ahead            int     How far ahead to show one-time events (default 30)
  *   show_game_logo        string  'yes'|'no'
  *   show_game_description string  'yes'|'no'
  *   display               string  'full' (default) | 'compact'
- *                                 compact = no venue cards; shows time → venue name inline
- *   show_day_filter       string  'yes'|'no' — show clickable day buttons above the schedule
- *   show_themed_filter    string  'yes'|'no' — add a "Themed Events" toggle button
+ *                                 compact = no venue cards; shows time -> venue name inline
+ *   show_day_filter       string  'yes'|'no' -- show clickable day buttons above the schedule
+ *   show_themed_filter    string  'yes'|'no' -- add a "Themed Events" toggle button
  *   default_day           string  Pre-select a day on load, e.g. "Tuesday" (requires show_day_filter="yes")
  */
 
@@ -33,7 +33,7 @@ function cerrito_master_schedule_shortcode( array $atts ) {
         'display'               => 'full',
         'show_day_filter'       => 'no',
         'show_themed_filter'    => 'no',
-        'default_day'           => '',   // e.g. "Tuesday" — pre-selects that day on load
+        'default_day'           => '',   // e.g. "Tuesday" -- pre-selects that day on load
     ], $atts );
 
     if ( empty( $atts['location'] ) && is_singular( 'location' ) ) {
@@ -129,7 +129,7 @@ function cerrito_master_schedule_shortcode( array $atts ) {
     $wrapper_class = 'cerrito-master-schedule' . ( $display === 'compact' ? ' cerrito-master-schedule--compact' : '' );
     echo '<div id="' . esc_attr( $uid ) . '" class="' . esc_attr( $wrapper_class ) . '">';
 
-    // ── Filter bar ────────────────────────────────────────────────────────────
+    // -- Filter bar ------------------------------------------------------------
     $any_filter = $show_filter || $show_themed_filter;
 
     if ( $any_filter ) {
@@ -153,7 +153,7 @@ function cerrito_master_schedule_shortcode( array $atts ) {
             if ( $show_filter && count( $days_with_events ) > 1 ) {
                 echo '<span class="cerrito-day-filter__sep" aria-hidden="true"></span>';
             }
-            echo '<button class="cerrito-day-filter__btn cerrito-day-filter__btn--themed" data-filter="themed" data-themed="off">🎭 Themed</button>';
+            echo '<button class="cerrito-day-filter__btn cerrito-day-filter__btn--themed" data-filter="themed" data-themed="off">&#x1F3AD; Themed</button>';
         }
 
         echo '</div>';
@@ -197,7 +197,7 @@ function cerrito_master_schedule_shortcode( array $atts ) {
 
     echo '</div>'; // .cerrito-master-schedule
 
-    // ── Inline JS — only emitted when any filter is active ───────────────────
+    // -- Inline JS -- only emitted when any filter is active -------------------
     if ( $any_filter ) {
         $default_js = esc_js( $default_day );
         ?>

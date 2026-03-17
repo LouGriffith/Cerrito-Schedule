@@ -6,7 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [6.12.0] - 2026-03-12
+## [6.13.0] - 2026-03-12
+
+### Changed
+- `game_type` parameter on all shortcodes now accepts a comma-separated list of
+  slugs or names, e.g. `game_type="music-bingo,trivia"`
+- Single-value usage is unchanged and fully backward compatible
+- Updated `cerrito_filter_by_game_type()` helper to handle multiple values
+
+---
+
+## [6.14.0] - 2026-03-17
+
+### Added
+- `[cerrito_game_type_schedule]` shortcode — game-type-first view showing each game type
+  as a header with all scheduled locations and times listed underneath
+  - Recurring events grouped under "Every Monday", "Every Tuesday" etc. in canonical day order
+  - Upcoming one-time events grouped by date ("Mar 21 (Friday)")
+  - Each row shows the location name (linked) and time, right-aligned
+  - Respects ACF `game_color` for colored header bars per game type
+  - Parameters: `game_type` (filter to one type), `days_ahead` (default 60),
+    `show_logo` (yes/no), `show_description` (yes/no), `orderby` (name/menu_order)
+
+---
+
+## [6.13.0]
 
 ### Added
 - Game type color picker — add a `game_color` Color Picker ACF field to the `game_type`

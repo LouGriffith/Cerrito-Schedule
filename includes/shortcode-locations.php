@@ -8,9 +8,9 @@
  *
  * Parameters:
  *   game_type      string   Filter events by game type slug or name
- *   show_address   string   'yes'|'no'  — show address line (default yes)
- *   show_specials  string   'yes'|'no'  — show specials/offers text (default yes)
- *   show_logo      string   'yes'|'no'  — show location logo (default yes)
+ *   show_address   string   'yes'|'no'  -- show address line (default yes)
+ *   show_specials  string   'yes'|'no'  -- show specials/offers text (default yes)
+ *   show_logo      string   'yes'|'no'  -- show location logo (default yes)
  *   days_ahead     int      How far ahead to look for one-time events (default 60)
  *   orderby        string   'name' (default) | 'menu_order'
  *   empty_message  string   Text shown when a location has no events
@@ -42,7 +42,7 @@ function cerrito_locations_shortcode( array $atts ) {
     $end_date   = wp_date( 'Y-m-d', strtotime( "+{$days_ahead} days" ) );
     $day_order  = [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ];
 
-    // ── Fetch all locations ───────────────────────────────────────────────────
+    // -- Fetch all locations ---------------------------------------------------
     $location_query_args = [
         'post_type'      => 'location',
         'posts_per_page' => -1,
@@ -53,14 +53,14 @@ function cerrito_locations_shortcode( array $atts ) {
         $location_query_args['orderby'] = 'menu_order';
         $location_query_args['order']   = 'ASC';
     } else {
-        // Fetch alphabetically, then re-sort in PHP: letters A–Z first, numbers after
+        // Fetch alphabetically, then re-sort in PHP: letters A-Z first, numbers after
         $location_query_args['orderby'] = 'title';
         $location_query_args['order']   = 'ASC';
     }
 
     $locations = get_posts( $location_query_args );
 
-    // Re-sort: A–Z first, then 0–9 (WordPress default puts numbers before letters)
+    // Re-sort: A-Z first, then 0-9 (WordPress default puts numbers before letters)
     if ( $atts['orderby'] !== 'menu_order' ) {
         usort( $locations, function( $a, $b ) {
             $ta          = $a->post_title;
@@ -78,7 +78,7 @@ function cerrito_locations_shortcode( array $atts ) {
         return ob_get_clean();
     }
 
-    // ── Fetch all events once, then index by location ID ──────────────────────
+    // -- Fetch all events once, then index by location ID ----------------------
     $all_events = get_posts( [
         'post_type'      => 'event',
         'posts_per_page' => -1,
@@ -90,7 +90,7 @@ function cerrito_locations_shortcode( array $atts ) {
     }
 
     // Index events by location ID for fast lookup
-    $events_by_location = [];   // [ location_id => [ WP_Post, … ] ]
+    $events_by_location = [];   // [ location_id => [ WP_Post, ... ] ]
 
     foreach ( $all_events as $event ) {
         $loc = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
@@ -98,7 +98,7 @@ function cerrito_locations_shortcode( array $atts ) {
         $events_by_location[ $loc->ID ][] = $event;
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    // -- Render ----------------------------------------------------------------
     echo '<div class="cerrito-locations">';
 
     foreach ( $locations as $location ) {
@@ -111,7 +111,7 @@ function cerrito_locations_shortcode( array $atts ) {
 
         echo '<div class="cerrito-location-entry">';
 
-        // ── Location header ───────────────────────────────────────────────────
+        // -- Location header ---------------------------------------------------
         echo '<div class="cerrito-location-entry__header">';
 
         if ( $logo ) {
@@ -128,13 +128,13 @@ function cerrito_locations_shortcode( array $atts ) {
         echo '</h3>';
 
         if ( $address ) {
-            echo '<div class="cerrito-location-entry__address">📍 ' . esc_html( cerrito_flatten_address( $address ) ) . '</div>';
+            echo '<div class="cerrito-location-entry__address">&#x1F4CD; ' . esc_html( cerrito_flatten_address( $address ) ) . '</div>';
         }
 
         if ( $website ) {
             $display_url = preg_replace( '#^https?://#', '', rtrim( $website, '/' ) );
             echo '<div class="cerrito-location-entry__website">';
-            echo '🌐 <a href="' . esc_url( $website ) . '" target="_blank" rel="noopener">' . esc_html( $display_url ) . '</a>';
+            echo '&#x1F310; <a href="' . esc_url( $website ) . '" target="_blank" rel="noopener">' . esc_html( $display_url ) . '</a>';
             echo '</div>';
         }
 
@@ -145,14 +145,14 @@ function cerrito_locations_shortcode( array $atts ) {
         echo '</div>'; // __info
         echo '</div>'; // __header
 
-        // ── Events for this location ──────────────────────────────────────────
+        // -- Events for this location ------------------------------------------
         echo '<div class="cerrito-location-entry__events">';
 
         if ( empty( $loc_events ) ) {
             echo '<p class="cerrito-location-entry__empty">' . esc_html( $atts['empty_message'] ) . '</p>';
         } else {
             // Split into recurring (grouped by day) and upcoming one-time
-            $by_day   = [];   // [ 'Monday' => [ group_key => group ], … ]
+            $by_day   = [];   // [ 'Monday' => [ group_key => group ], ... ]
             $upcoming = [];   // [ date => [ group_key => group ] ]
 
             foreach ( $loc_events as $event ) {
@@ -265,7 +265,7 @@ add_shortcode( 'cerrito_locations', 'cerrito_locations_shortcode' );
 
 /**
  * Render a single event row inside the location directory view.
- * Shows: emoji  game-type  [theme]  —  time(s)
+ * Shows: emoji  game-type  [theme]  --  time(s)
  *
  * @param array $group       Keys: type, theme, class, events
  * @param bool  $coming_soon Replace time with "TBA"

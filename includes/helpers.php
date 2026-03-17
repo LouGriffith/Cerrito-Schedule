@@ -7,7 +7,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// ── Location helpers ──────────────────────────────────────────────────────────
+// -- Location helpers ----------------------------------------------------------
 
 /**
  * Resolve an ACF relationship field (array or single object) to a WP_Post.
@@ -62,7 +62,7 @@ function cerrito_get_location_address( $location_id ) {
     return '';
 }
 
-// ── Game type helpers ─────────────────────────────────────────────────────────
+// -- Game type helpers ---------------------------------------------------------
 
 /**
  * Look up a game_type term by name or slug.
@@ -144,7 +144,8 @@ function cerrito_game_color_style( $type_name, $property = 'color' ) {
     $color = cerrito_get_game_color( $type_name );
     return $color ? ' style="' . esc_attr( $property . ':' . $color ) . '"' : '';
 }
- *
+
+/**
  * @param string $event_type
  * @return string
  */
@@ -167,7 +168,7 @@ function cerrito_get_event_type_string( $post_id ) {
     return implode( ', ', wp_list_pluck( $types, 'name' ) );
 }
 
-// ── Theme helpers ─────────────────────────────────────────────────────────────
+// -- Theme helpers -------------------------------------------------------------
 
 /**
  * Get the active theme for a game type on a specific date.
@@ -229,7 +230,7 @@ function cerrito_get_next_themed_date_for_day( $term_id, $day_name, $days_ahead 
     return '';
 }
 
-// ── Image helpers ─────────────────────────────────────────────────────────────
+// -- Image helpers -------------------------------------------------------------
 
 /**
  * Resolve an ACF image field (array, attachment ID, or URL string) to a URL.
@@ -244,7 +245,7 @@ function cerrito_resolve_image_url( $field ) {
     return '';
 }
 
-// ── Date helpers ──────────────────────────────────────────────────────────────
+// -- Date helpers --------------------------------------------------------------
 
 /**
  * Normalise an ACF date field to Y-m-d format.
@@ -270,7 +271,7 @@ function cerrito_normalise_date( $date ) {
     return $date;
 }
 
-// ── String helpers ────────────────────────────────────────────────────────────
+// -- String helpers ------------------------------------------------------------
 
 /**
  * Replace newlines in an address string with spaces for single-line display.
@@ -282,22 +283,27 @@ function cerrito_flatten_address( $address ) {
     return str_replace( [ "\r\n", "\n", "\r" ], ' ', $address );
 }
 
-// ── Query helpers ─────────────────────────────────────────────────────────────
+// -- Query helpers -------------------------------------------------------------
 
 /**
  * Filter an array of event WP_Posts to only those matching a game type slug or name.
+ * Accepts a single value or a comma-separated list, e.g. "music-bingo,trivia".
  *
  * @param WP_Post[] $events
- * @param string    $game_type
+ * @param string    $game_type  Single slug/name or comma-separated list
  * @return WP_Post[]
  */
 function cerrito_filter_by_game_type( array $events, $game_type ) {
-    return array_filter( $events, function( $event ) use ( $game_type ) {
+    $needles = array_filter( array_map( 'trim', explode( ',', $game_type ) ) );
+
+    return array_filter( $events, function( $event ) use ( $needles ) {
         $types = get_the_terms( $event->ID, 'game_type' );
         if ( ! $types || is_wp_error( $types ) ) return false;
         foreach ( $types as $type ) {
-            if ( $type->slug === $game_type || strtolower( $type->name ) === strtolower( $game_type ) ) {
-                return true;
+            foreach ( $needles as $needle ) {
+                if ( $type->slug === $needle || strtolower( $type->name ) === strtolower( $needle ) ) {
+                    return true;
+                }
             }
         }
         return false;
@@ -318,7 +324,7 @@ function cerrito_filter_by_location( array $events, $location_id ) {
     } );
 }
 
-// ── Sort helpers ──────────────────────────────────────────────────────────────
+// -- Sort helpers --------------------------------------------------------------
 
 /**
  * Convert a free-text event_time string to minutes-since-midnight for sorting.
@@ -356,22 +362,22 @@ function cerrito_sort_events_by_time( array $events ) {
     return $events;
 }
 
-// ── Skip-date helpers ─────────────────────────────────────────────────────────
+// -- Skip-date helpers ---------------------------------------------------------
 
 /**
  * Return the cancellation reason for a recurring event on a specific date,
  * or an empty string if the event is not cancelled on that date.
  *
  * Uses the ACF repeater field `skip_dates` with sub-fields:
- *   skip_date   — Date Picker (return format Y-m-d)
- *   skip_reason — Text (optional public-facing reason)
+ *   skip_date   -- Date Picker (return format Y-m-d)
+ *   skip_reason -- Text (optional public-facing reason)
  *
  * ACF setup required:
  *   Field group : Events
  *   Field label : Skip Dates
  *   Field name  : skip_dates          (Repeater)
- *   Sub-fields  : skip_date           (Date Picker — return format Y-m-d)
- *                 skip_reason         (Text — optional)
+ *   Sub-fields  : skip_date           (Date Picker -- return format Y-m-d)
+ *                 skip_reason         (Text -- optional)
  *
  * @param int    $post_id  Event post ID
  * @param string $date     Y-m-d date to check
@@ -412,7 +418,7 @@ function cerrito_is_skipped_on( $post_id, $date ) {
  * @return string           Y-m-d
  */
 function cerrito_next_date_for_day( $day_name ) {
-    $today    = (int) wp_date( 'N' ); // 1 (Mon) … 7 (Sun)
+    $today    = (int) wp_date( 'N' ); // 1 (Mon) ... 7 (Sun)
     $day_map  = [ 'Monday'=>1,'Tuesday'=>2,'Wednesday'=>3,'Thursday'=>4,'Friday'=>5,'Saturday'=>6,'Sunday'=>7 ];
     $target   = $day_map[ $day_name ] ?? 1;
     $diff     = ( $target - $today + 7 ) % 7;
@@ -432,7 +438,7 @@ function cerrito_next_date_for_day_from_event( $event ) {
     return cerrito_next_date_for_day( $when_terms[0]->name );
 }
 
-// ── Render helpers ────────────────────────────────────────────────────────────
+// -- Render helpers ------------------------------------------------------------
 
 /**
  * Render a single event group card (used by master schedule and recurring schedule).
@@ -518,7 +524,7 @@ function cerrito_render_event_group( array $group, $is_recurring, $show_game_log
 }
 
 /**
- * Render a compact (no-card) event group — just type label + inline venue rows.
+ * Render a compact (no-card) event group -- just type label + inline venue rows.
  *
  * @param array $group
  * @param bool  $is_recurring
@@ -560,7 +566,7 @@ function cerrito_render_event_group_compact( array $group, $is_recurring ) {
                 <span class="cerrito-compact-venue">
                     <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
                         <?php echo esc_html( $location->post_title ); ?>
-                    </a><?php if ( $is_cancelled ) : ?><span class="cerrito-compact-cancel-reason"> — <?php echo esc_html( $cancel_reason ?: 'Cancelled this week' ); ?></span><?php endif; ?>
+                    </a><?php if ( $is_cancelled ) : ?><span class="cerrito-compact-cancel-reason"> -- <?php echo esc_html( $cancel_reason ?: 'Cancelled this week' ); ?></span><?php endif; ?>
                 </span>
                 <?php if ( $event_time ) : ?>
                     <span class="cerrito-compact-time"><?php echo esc_html( $event_time ); ?></span>
@@ -604,7 +610,7 @@ function cerrito_render_occurrence_title( $emoji, $type, $theme, $date = '' ) {
  *
  * @param WP_Post $event
  * @param string  $event_class
- * @param string  $check_date   Optional Y-m-d — if provided and event is cancelled on
+ * @param string  $check_date   Optional Y-m-d -- if provided and event is cancelled on
  *                              this date, the card renders struck-through with the reason
  */
 function cerrito_render_location_card( $event, $event_class, $check_date = '' ) {
@@ -640,10 +646,10 @@ function cerrito_render_location_card( $event, $event_class, $check_date = '' ) 
                 <?php endif; ?>
             </div>
             <?php if ( $event_time ) : ?>
-                <div class="cerrito-location-time">🕐 <?php echo esc_html( $event_time ); ?></div>
+                <div class="cerrito-location-time">&#x1F550; <?php echo esc_html( $event_time ); ?></div>
             <?php endif; ?>
             <?php if ( $location_address ) : ?>
-                <div class="cerrito-location-address">📍 <?php echo esc_html( cerrito_flatten_address( $location_address ) ); ?></div>
+                <div class="cerrito-location-address">&#x1F4CD; <?php echo esc_html( cerrito_flatten_address( $location_address ) ); ?></div>
             <?php endif; ?>
             <?php if ( $age_restriction ) : ?>
                 <div class="cerrito-location-badges">

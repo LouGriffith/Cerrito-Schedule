@@ -8,7 +8,7 @@
  *   days_ahead       int     How many days ahead to show (default 30)
  *   location         string  Location slug or ID (auto-detected on single location pages)
  *   game_type        string  Filter by game type slug or name
- *   show_coming_soon string  'yes'|'no' — reserved for future use
+ *   show_coming_soon string  'yes'|'no' -- reserved for future use
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -133,7 +133,7 @@ function cerrito_schedule_shortcode( array $atts ) {
                                     <?php echo esc_html( $location->post_title ); ?>
                                 </a>
                                 <?php if ( $event_time ) : ?>
-                                    → <span class="cerrito-event-time"><?php echo esc_html( $event_time ); ?></span>
+                                    -> <span class="cerrito-event-time"><?php echo esc_html( $event_time ); ?></span>
                                 <?php endif; ?>
                             </div>
                         <?php endif;

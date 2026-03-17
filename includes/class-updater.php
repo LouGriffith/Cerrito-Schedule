@@ -43,7 +43,7 @@ class Cerrito_Schedule_Updater {
         add_action( 'upgrader_process_complete',             [ $this, 'purge_cache' ], 10, 2 );
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+    // -- Private helpers -------------------------------------------------------
 
     /**
      * @return array
@@ -119,7 +119,7 @@ class Cerrito_Schedule_Updater {
 
     /**
      * Strip a leading "v" or "V" from a GitHub tag to get a plain version string.
-     * e.g. "v6.5" → "6.5"
+     * e.g. "v6.5" -> "6.5"
      *
      * @param string $tag
      * @return string
@@ -128,7 +128,7 @@ class Cerrito_Schedule_Updater {
         return ltrim( $tag, 'vV' );
     }
 
-    // ── WordPress hooks ───────────────────────────────────────────────────────
+    // -- WordPress hooks -------------------------------------------------------
 
     /**
      * Inject our plugin into WordPress's update transient when a newer
