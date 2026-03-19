@@ -1,20 +1,10 @@
 <?php
 /**
  * Shortcode: [cerrito_themed_rounds]
- *
- * Displays upcoming events that have a special theme, in a compact card layout.
- *
- * Parameters:
- *   days_ahead  int     How far ahead to look (default 60)
- *   game_type   string  Filter by game type slug or name
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/**
- * @param array $atts
- * @return string
- */
 function cerrito_themed_rounds_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'days_ahead' => '60',
@@ -27,7 +17,6 @@ function cerrito_themed_rounds_shortcode( array $atts ) {
     $today    = wp_date( 'Y-m-d' );
     $end_date = wp_date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
 
-    // Events with an explicit manual theme
     $manual_theme_events = get_posts( [
         'post_type'      => 'event',
         'posts_per_page' => -1,
@@ -42,7 +31,6 @@ function cerrito_themed_rounds_shortcode( array $atts ) {
         ],
     ] );
 
-    // All events in range (for automatic themed-date lookup)
     $all_range_events = get_posts( [
         'post_type'      => 'event',
         'posts_per_page' => -1,
@@ -57,7 +45,6 @@ function cerrito_themed_rounds_shortcode( array $atts ) {
         ] ],
     ] );
 
-    // Merge: add auto-themed events not already captured
     $seen_ids      = array_column( $manual_theme_events, 'ID' );
     $themed_events = $manual_theme_events;
 
@@ -83,7 +70,6 @@ function cerrito_themed_rounds_shortcode( array $atts ) {
             $event_date    = cerrito_normalise_date( get_field( 'event_date', $event->ID ) );
             $special_theme = get_field( 'special_theme', $event->ID );
 
-            // Resolve automatic theme if no manual one set
             if ( empty( $special_theme ) && $event_date ) {
                 $types = get_the_terms( $event->ID, 'game_type' );
                 if ( $types && ! is_wp_error( $types ) ) {

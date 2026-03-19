@@ -2,20 +2,15 @@
 
 WordPress plugin for managing and displaying trivia and bingo event schedules across multiple locations.
 
-## ⚠️ Installation
+## Installation
 
-**Do not use the "Download ZIP" button on GitHub.** The source ZIP extracts with the wrong folder name and WordPress will not install it correctly.
+**Do not use the "Download ZIP" button on GitHub.** The source ZIP extracts with the wrong folder name.
 
 Instead:
-
 1. Go to the [Releases page](../../releases)
 2. Download the **`cerrito-schedule-X.X.X.zip`** asset attached to the latest release
-3. In WordPress, go to **Plugins → Add New → Upload Plugin**
-4. Upload that ZIP and activate
-
-WordPress auto-updates work automatically — once installed from the release ZIP, future updates are delivered through the standard WordPress update system.
-
----
+3. In WordPress: **Plugins → Add New → Upload Plugin**
+4. Upload and activate
 
 ## Shortcodes
 

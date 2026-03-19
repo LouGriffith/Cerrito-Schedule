@@ -8,15 +8,10 @@
  *   location   string  Location slug or ID (auto-detected on single location pages)
  *   game_type  string  Filter by game type slug or name
  *   display    string  'full' (default) | 'compact'
- *                      compact = no venue cards; shows time -> venue name inline
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/**
- * @param array $atts
- * @return string
- */
 function cerrito_recurring_schedule_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'location'  => '',
@@ -129,7 +124,6 @@ function cerrito_recurring_schedule_shortcode( array $atts ) {
             echo '</div>'; // .cerrito-recurring-day
         }
 
-        // Coming Soon section
         if ( ! empty( $coming_soon ) ) {
             echo '<div class="cerrito-coming-soon-section">';
             echo '<div class="cerrito-occurrence-title">Coming Soon</div>';
@@ -152,11 +146,6 @@ function cerrito_recurring_schedule_shortcode( array $atts ) {
 }
 add_shortcode( 'cerrito_recurring_schedule', 'cerrito_recurring_schedule_shortcode' );
 
-/**
- * Render a compact "Coming Soon" row (no card).
- *
- * @param WP_Post $event
- */
 function cerrito_render_coming_soon_compact( $event ) {
     $event_type = cerrito_get_event_type_string( $event->ID );
     $location   = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
@@ -172,23 +161,17 @@ function cerrito_render_coming_soon_compact( $event ) {
             <?php echo esc_html( $event_type ); ?>
         </div>
         <div class="cerrito-compact-row">
-            <span class="cerrito-compact-time">TBA</span>
-            <span class="cerrito-compact-arrow">-></span>
             <span class="cerrito-compact-venue">
                 <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
                     <?php echo esc_html( $location->post_title ); ?>
                 </a>
             </span>
+            <span class="cerrito-compact-time">TBA</span>
         </div>
     </div>
     <?php
 }
 
-/**
- * Render a "Coming Soon" card for a recurring event with no day assigned yet.
- *
- * @param WP_Post $event
- */
 function cerrito_render_coming_soon_card( $event ) {
     $event_type      = cerrito_get_event_type_string( $event->ID );
     $special_theme   = get_field( 'special_theme', $event->ID );

@@ -6,13 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [6.13.0] - 2026-03-12
+## [6.16.0] - 2026-03-19
 
 ### Changed
-- `game_type` parameter on all shortcodes now accepts a comma-separated list of
-  slugs or names, e.g. `game_type="music-bingo,trivia"`
-- Single-value usage is unchanged and fully backward compatible
-- Updated `cerrito_filter_by_game_type()` helper to handle multiple values
+- `[cerrito_today]` compact and full styles — events now group by game type only
+  (previously, an event with a theme was placed in a separate group from the same
+  game type without a theme, causing duplicate section headers)
+- Theme for each event is now resolved and shown **inline** beneath the venue/time
+  row in italic pink (e.g. *Beyonce Night on 3/19*), matching the screenshot layout
+- `.cerrito-today-header` bottom margin reduced from 30 px to 10 px
+- New `.cerrito-today-inline-theme` CSS class for the inline theme label
 
 ---
 
@@ -41,7 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [6.13.0]
+## [6.13.0] - 2026-03-12
 
 ### Added
 - Game type color picker — add a `game_color` Color Picker ACF field to the `game_type`
@@ -55,6 +58,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `cerrito_game_color_style( $type_name, $property )` helper — returns inline `style=`
   attribute string for any CSS property; falls back gracefully to CSS class colors if
   the ACF field is not set
+- `game_type` parameter on all shortcodes now accepts a comma-separated list of
+  slugs or names, e.g. `game_type="music-bingo,trivia"`
+- Single-value usage is unchanged and fully backward compatible
+- Updated `cerrito_filter_by_game_type()` helper to handle multiple values
 
 ### ACF setup required
 - Add field to **Game Types** taxonomy field group:
@@ -155,7 +162,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [6.5.0]
+## [6.5.0] - 2026-03-10
 
 ### Added
 - `display="compact"` parameter for `[cerrito_master_schedule]` and `[cerrito_recurring_schedule]`
@@ -182,7 +189,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [6.4] - 2026-02-28
+## [6.4.0] - 2026-02-28
 
 ### Fixed
 - Timezone bug: replaced all `date()` calls with `wp_date()` across 6 files so event dates
@@ -190,7 +197,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [6.2] - 2026-02-20
+## [6.2.0] - 2026-02-20
 
 ### Added
 - `[cerrito_upcoming_themes_list]` shortcode — formatted upcoming themed dates from
@@ -201,50 +208,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [4.5] - 2026-02-16
+## [4.5.0] - 2026-02-16
 
 ### Added
 - `[cerrito_themed_rounds]` shortcode — card-based display of upcoming themed events
 - Day abbreviation, M/D date format, game emoji, hover effects, colour coding
 
-## [4.4] - 2026-02-16
+## [4.4.0] - 2026-02-16
 
 ### Added
 - Automatic location detection on single location pages (`is_singular('location')`)
 
-## [4.3] - 2026-02-16
+## [4.3.0] - 2026-02-16
 
 ### Added
 - `style="compact"` parameter for `[cerrito_today]`
 
-## [4.2] - 2026-02-16
+## [4.2.0] - 2026-02-16
 
 ### Added
 - `[cerrito_today]` shortcode — all events (recurring + one-time) for the current day
 
-## [4.1] - 2026-02-16
+## [4.1.0] - 2026-02-16
 
 ### Changed
 - Game descriptions pulled from native taxonomy description field instead of custom ACF field
 
-## [4.0] - 2026-02-16
+## [4.0.0] - 2026-02-16
 
 ### Added
 - `[cerrito_master_schedule]` shortcode combining recurring and upcoming events by day of week
 - `show_game_logo` and `show_game_description` parameters
 
-## [3.0] - 2026-02-16
+## [3.0.0] - 2026-02-16
 
 ### Added
 - `[cerrito_recurring_schedule]` shortcode — weekly recurring events with full location cards
 - "Coming Soon" section for events without a day assignment
 
-## [2.0] - 2026-02-16
+## [2.0.0] - 2026-02-16
 
 ### Added
 - `game_type` and `location` filtering parameters across all shortcodes
 
-## [1.0] - 2026-02-16
+## [1.0.0] - 2026-02-16
 
 ### Added
 - Initial release: `[cerrito_schedule]` shortcode, ACF integration, admin columns plugin

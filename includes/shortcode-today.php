@@ -49,14 +49,14 @@ function cerrito_today_schedule_shortcode( array $atts ) {
 
         if ( ! $include ) continue;
 
-        $event_type    = cerrito_get_event_type_string( $event->ID );
-        $special_theme = get_field( 'special_theme', $event->ID );
-        $group_key     = $event_type . ( $special_theme ? ' - ' . $special_theme : '' );
+        $event_type = cerrito_get_event_type_string( $event->ID );
+
+        // Group by game type only - theme is stored per-event and rendered inline
+        $group_key = $event_type;
 
         if ( ! isset( $today_groups[ $group_key ] ) ) {
             $today_groups[ $group_key ] = [
                 'type'   => $event_type,
-                'theme'  => $special_theme,
                 'class'  => cerrito_get_event_class( $event_type ),
                 'events' => [],
             ];
@@ -102,7 +102,11 @@ add_shortcode( 'cerrito_today', 'cerrito_today_schedule_shortcode' );
 // -- Style-specific renderers --------------------------------------------------
 
 /**
- * @param array $groups
+ * Compact renderer: game type label, then one venue row per event.
+ * Theme shown inline beneath the venue name if present.
+ *
+ * @param array  $groups
+ * @param string $today_date  Y-m-d
  */
 function cerrito_today_render_compact( array $groups, $today_date ) {
     foreach ( $groups as $group ) :
@@ -114,18 +118,25 @@ function cerrito_today_render_compact( array $groups, $today_date ) {
                     <span class="cerrito-game-emoji"><?php echo esc_html( $game_emoji ); ?></span>
                 <?php endif; ?>
                 <?php echo esc_html( $group['type'] ); ?>
-                <?php if ( $group['theme'] ) : ?>
-                    <span class="cerrito-theme-inline"><?php echo esc_html( $group['theme'] ); ?></span>
-                <?php endif; ?>
             </div>
 
             <?php foreach ( $group['events'] as $event ) :
                 $event_time    = get_field( 'event_time', $event->ID );
                 $location      = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
                 if ( ! $location ) continue;
+
+                // Per-event theme
+                $special_theme = get_field( 'special_theme', $event->ID );
+                if ( empty( $special_theme ) ) {
+                    $types = get_the_terms( $event->ID, 'game_type' );
+                    if ( $types && ! is_wp_error( $types ) ) {
+                        $auto = cerrito_get_event_theme( $types[0]->term_id, $today_date );
+                        if ( $auto ) $special_theme = $auto->name;
+                    }
+                }
+
                 $cancel_reason = cerrito_get_skip_reason( $event->ID, $today_date );
                 $is_cancelled  = $cancel_reason !== '';
-                if ( $is_cancelled && $cancel_reason === '' ) $cancel_reason = 'Cancelled today';
             ?>
                 <div class="cerrito-compact-venue<?php echo $is_cancelled ? ' cerrito-compact-venue--cancelled' : ''; ?>">
                     <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
@@ -133,8 +144,13 @@ function cerrito_today_render_compact( array $groups, $today_date ) {
                     </a>
                     <?php if ( $is_cancelled ) : ?>
                         <span class="cerrito-compact-cancel-reason"><?php echo esc_html( $cancel_reason ?: 'Cancelled today' ); ?></span>
-                    <?php elseif ( $event_time ) : ?>
-                    ➜ <?php echo esc_html( $event_time ); ?>
+                    <?php else : ?>
+                        <?php if ( $event_time ) : ?>
+                            &#x279C; <?php echo esc_html( $event_time ); ?>
+                        <?php endif; ?>
+                        <?php if ( $special_theme ) : ?>
+                            <br><span class="cerrito-today-inline-theme"><?php echo esc_html( $special_theme ); ?></span>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
@@ -144,8 +160,12 @@ function cerrito_today_render_compact( array $groups, $today_date ) {
 }
 
 /**
- * @param array $groups
- * @param array $atts
+ * Full renderer: logo/description header, then location cards per event.
+ * Theme shown via the location card's inline cancel/note area.
+ *
+ * @param array  $groups
+ * @param array  $atts
+ * @param string $today_date  Y-m-d
  */
 function cerrito_today_render_full( array $groups, array $atts, $today_date ) {
     foreach ( $groups as $group ) :
@@ -162,14 +182,14 @@ function cerrito_today_render_full( array $groups, array $atts, $today_date ) {
                         </div>
                     <?php endif; ?>
                     <div class="cerrito-game-info">
-                        <?php cerrito_render_occurrence_title( $game_emoji, $group['type'], $group['theme'] ); ?>
+                        <?php cerrito_render_occurrence_title( $game_emoji, $group['type'], '' ); ?>
                         <?php if ( $game_description ) : ?>
                             <p class="cerrito-game-description"><?php echo esc_html( $game_description ); ?></p>
                         <?php endif; ?>
                     </div>
                 </div>
             <?php else : ?>
-                <?php cerrito_render_occurrence_title( $game_emoji, $group['type'], $group['theme'] ); ?>
+                <?php cerrito_render_occurrence_title( $game_emoji, $group['type'], '' ); ?>
             <?php endif; ?>
 
             <?php foreach ( $group['events'] as $event ) :

@@ -30,9 +30,6 @@ class Cerrito_Schedule_Updater {
     /** @var object|null|false */
     private $github_response = null;
 
-    /**
-     * @param string $plugin_file  Absolute path to the main plugin file (__FILE__)
-     */
     public function __construct( $plugin_file ) {
         $this->plugin_file = $plugin_file;
         $this->plugin_slug = plugin_basename( $plugin_file );
@@ -43,11 +40,6 @@ class Cerrito_Schedule_Updater {
         add_action( 'upgrader_process_complete',             [ $this, 'purge_cache' ], 10, 2 );
     }
 
-    // -- Private helpers -------------------------------------------------------
-
-    /**
-     * @return array
-     */
     private function get_plugin_data() {
         if ( empty( $this->plugin_data ) ) {
             $this->plugin_data = get_plugin_data( $this->plugin_file );
@@ -55,12 +47,6 @@ class Cerrito_Schedule_Updater {
         return $this->plugin_data;
     }
 
-    /**
-     * Fetch the latest release from the GitHub API.
-     * Result is cached in a transient for 6 hours.
-     *
-     * @return object|false
-     */
     private function get_github_release() {
         if ( $this->github_response !== null ) {
             return $this->github_response;
@@ -99,13 +85,6 @@ class Cerrito_Schedule_Updater {
         return $body;
     }
 
-    /**
-     * Return the download URL for the release zip.
-     * Prefers an explicit .zip asset; falls back to GitHub's auto-generated source zip.
-     *
-     * @param object $release
-     * @return string
-     */
     private function get_download_url( $release ) {
         if ( ! empty( $release->assets ) ) {
             foreach ( $release->assets as $asset ) {
@@ -117,26 +96,10 @@ class Cerrito_Schedule_Updater {
         return "https://github.com/{$this->github_user}/{$this->github_repo}/archive/refs/tags/{$release->tag_name}.zip";
     }
 
-    /**
-     * Strip a leading "v" or "V" from a GitHub tag to get a plain version string.
-     * e.g. "v6.5" -> "6.5"
-     *
-     * @param string $tag
-     * @return string
-     */
     private function normalize_version( $tag ) {
         return ltrim( $tag, 'vV' );
     }
 
-    // -- WordPress hooks -------------------------------------------------------
-
-    /**
-     * Inject our plugin into WordPress's update transient when a newer
-     * version is available on GitHub.
-     *
-     * @param object $transient
-     * @return object
-     */
     public function check_for_update( $transient ) {
         if ( empty( $transient->checked ) ) {
             return $transient;
@@ -166,14 +129,6 @@ class Cerrito_Schedule_Updater {
         return $transient;
     }
 
-    /**
-     * Populate the "View details" modal in the plugins list.
-     *
-     * @param mixed  $result
-     * @param string $action
-     * @param object $args
-     * @return mixed
-     */
     public function plugin_info( $result, $action, $args ) {
         if ( $action !== 'plugin_information' ) {
             return $result;
@@ -207,15 +162,6 @@ class Cerrito_Schedule_Updater {
         ];
     }
 
-    /**
-     * After install: rename the extracted GitHub zip folder to match
-     * the expected plugin directory, then re-activate the plugin.
-     *
-     * @param mixed $response
-     * @param array $hook_extra
-     * @param array $result
-     * @return mixed
-     */
     public function after_install( $response, $hook_extra, $result ) {
         global $wp_filesystem;
 
@@ -232,13 +178,6 @@ class Cerrito_Schedule_Updater {
         return $result;
     }
 
-    /**
-     * Delete the cached release after an upgrade so the next check
-     * fetches fresh data from GitHub.
-     *
-     * @param object $upgrader
-     * @param array  $options
-     */
     public function purge_cache( $upgrader, $options ) {
         if (
             $options['action'] === 'update' &&

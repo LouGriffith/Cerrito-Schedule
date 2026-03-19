@@ -13,10 +13,6 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/**
- * @param array $atts
- * @return string
- */
 function cerrito_schedule_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'show_coming_soon' => 'yes',
@@ -25,7 +21,6 @@ function cerrito_schedule_shortcode( array $atts ) {
         'game_type'        => '',
     ], $atts );
 
-    // Auto-detect location on single location pages
     if ( empty( $atts['location'] ) && is_singular( 'location' ) ) {
         global $post;
         $atts['location'] = $post->post_name;
@@ -70,7 +65,6 @@ function cerrito_schedule_shortcode( array $atts ) {
             $event_type    = cerrito_get_event_type_string( $event->ID );
             $special_theme = get_field( 'special_theme', $event->ID );
 
-            // Fall back to automatic themed date
             if ( empty( $special_theme ) && $event_date ) {
                 $types = get_the_terms( $event->ID, 'game_type' );
                 if ( $types && ! is_wp_error( $types ) ) {
@@ -101,9 +95,7 @@ function cerrito_schedule_shortcode( array $atts ) {
             echo '<div class="cerrito-date-header">' . esc_html( $display_date ) . '</div>';
 
             foreach ( $groups as $group ) {
-                // Sort events within this group by start time, earliest first
                 $sorted_events = cerrito_sort_events_by_time( $group['events'] );
-
                 $game_logo  = cerrito_get_game_logo( $group['type'] );
                 $game_emoji = cerrito_get_game_emoji( $group['type'] );
                 ?>
@@ -120,7 +112,6 @@ function cerrito_schedule_shortcode( array $atts ) {
                         <?php endif; ?>
                         <?php echo esc_html( $group['type'] ); ?>
                         <?php if ( $group['theme'] ) :
-                            // Resolve theme emoji from the game-theme taxonomy term
                             $theme_name_clean = preg_replace( '/\s*\([^)]*\)$/', '', $group['theme'] );
                             $theme_term = get_term_by( 'name', $theme_name_clean, 'game-theme' )
                                        ?: get_term_by( 'slug', sanitize_title( $theme_name_clean ), 'game-theme' );
@@ -147,7 +138,7 @@ function cerrito_schedule_shortcode( array $atts ) {
                                     <?php echo esc_html( $location->post_title ); ?>
                                 </a>
                                 <?php if ( $event_time ) : ?>
-                                    ➜ <span class="cerrito-event-time"><?php echo esc_html( $event_time ); ?></span>
+                                    &#x279C; <span class="cerrito-event-time"><?php echo esc_html( $event_time ); ?></span>
                                 <?php endif; ?>
                             </div>
                         <?php endif;
