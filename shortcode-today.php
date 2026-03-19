@@ -1,0 +1,201 @@
+<?php
+/**
+ * Shortcode: [cerrito_today]
+ *
+ * Displays all events (recurring + one-time) happening today.
+ *
+ * Parameters:
+ *   style                 string  'full' (default) or 'compact'
+ *   show_game_logo        string  'yes'|'no' -- full style only
+ *   show_game_description string  'yes'|'no' -- full style only
+ */
+
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+/**
+ * @param array $atts
+ * @return string
+ */
+function cerrito_today_schedule_shortcode( array $atts ) {
+    $atts = shortcode_atts( [
+        'show_game_logo'        => 'yes',
+        'show_game_description' => 'no',
+        'style'                 => 'full',
+    ], $atts );
+
+    cerrito_enqueue_styles();
+    ob_start();
+
+    $today      = wp_date( 'l' );       // e.g. "Wednesday"
+    $today_date = wp_date( 'Y-m-d' );
+
+    $all_events   = get_posts( [ 'post_type' => 'event', 'posts_per_page' => -1 ] );
+    $today_groups = [];
+
+    foreach ( $all_events as $event ) {
+        $is_recurring = (bool) get_field( 'is_recurring', $event->ID );
+        $include      = false;
+
+        if ( $is_recurring ) {
+            $when_terms = get_the_terms( $event->ID, 'when' );
+            if ( $when_terms && ! is_wp_error( $when_terms ) ) {
+                foreach ( $when_terms as $t ) {
+                    if ( $t->name === $today ) { $include = true; break; }
+                }
+            }
+        } else {
+            $include = ( cerrito_normalise_date( get_field( 'event_date', $event->ID ) ) === $today_date );
+        }
+
+        if ( ! $include ) continue;
+
+        $event_type = cerrito_get_event_type_string( $event->ID );
+
+        // Group by game type only — theme is stored per-event and rendered inline
+        $group_key = $event_type;
+
+        if ( ! isset( $today_groups[ $group_key ] ) ) {
+            $today_groups[ $group_key ] = [
+                'type'   => $event_type,
+                'class'  => cerrito_get_event_class( $event_type ),
+                'events' => [],
+            ];
+        }
+        $today_groups[ $group_key ]['events'][] = $event;
+    }
+
+    // Sort each group's events by start time, earliest first
+    foreach ( $today_groups as &$group ) {
+        $group['events'] = cerrito_sort_events_by_time( $group['events'] );
+    }
+    unset( $group );
+
+    $wrapper_class = 'cerrito-today-schedule' . ( $atts['style'] === 'compact' ? ' compact' : '' );
+    echo '<div class="' . esc_attr( $wrapper_class ) . '">';
+
+    // -- Header ----------------------------------------------------------------
+    echo '<div class="cerrito-today-header">';
+    if ( $atts['style'] === 'compact' ) {
+        echo '<h2>' . esc_html( wp_date( 'l, F j, Y' ) ) . '</h2>';
+    } else {
+        echo '<div class="cerrito-today-day">'  . esc_html( strtoupper( $today ) ) . '</div>';
+        echo '<div class="cerrito-today-date">' . esc_html( wp_date( 'F j, Y' ) )  . '</div>';
+    }
+    echo '</div>';
+
+    // -- Events ----------------------------------------------------------------
+    if ( ! empty( $today_groups ) ) {
+        if ( $atts['style'] === 'compact' ) {
+            cerrito_today_render_compact( $today_groups, $today_date );
+        } else {
+            cerrito_today_render_full( $today_groups, $atts, $today_date );
+        }
+    } else {
+        echo '<div class="cerrito-today-empty"><p>No events scheduled for today. Check back tomorrow!</p></div>';
+    }
+
+    echo '</div>'; // wrapper
+    return ob_get_clean();
+}
+add_shortcode( 'cerrito_today', 'cerrito_today_schedule_shortcode' );
+
+// -- Style-specific renderers --------------------------------------------------
+
+/**
+ * Compact renderer: game type label, then one venue row per event.
+ * Theme shown inline beneath the venue name if present.
+ *
+ * @param array  $groups
+ * @param string $today_date  Y-m-d
+ */
+function cerrito_today_render_compact( array $groups, $today_date ) {
+    foreach ( $groups as $group ) :
+        $game_emoji = cerrito_get_game_emoji( $group['type'] );
+        ?>
+        <div class="cerrito-today-occurrence">
+            <div class="cerrito-occurrence-title">
+                <?php if ( $game_emoji ) : ?>
+                    <span class="cerrito-game-emoji"><?php echo esc_html( $game_emoji ); ?></span>
+                <?php endif; ?>
+                <?php echo esc_html( $group['type'] ); ?>
+            </div>
+
+            <?php foreach ( $group['events'] as $event ) :
+                $event_time    = get_field( 'event_time', $event->ID );
+                $location      = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
+                if ( ! $location ) continue;
+
+                // Per-event theme
+                $special_theme = get_field( 'special_theme', $event->ID );
+                if ( empty( $special_theme ) ) {
+                    $types = get_the_terms( $event->ID, 'game_type' );
+                    if ( $types && ! is_wp_error( $types ) ) {
+                        $auto = cerrito_get_event_theme( $types[0]->term_id, $today_date );
+                        if ( $auto ) $special_theme = $auto->name;
+                    }
+                }
+
+                $cancel_reason = cerrito_get_skip_reason( $event->ID, $today_date );
+                $is_cancelled  = $cancel_reason !== '';
+            ?>
+                <div class="cerrito-compact-venue<?php echo $is_cancelled ? ' cerrito-compact-venue--cancelled' : ''; ?>">
+                    <a href="<?php echo esc_url( get_permalink( $location->ID ) ); ?>">
+                        <?php echo esc_html( $location->post_title ); ?>
+                    </a>
+                    <?php if ( $is_cancelled ) : ?>
+                        <span class="cerrito-compact-cancel-reason"><?php echo esc_html( $cancel_reason ?: 'Cancelled today' ); ?></span>
+                    <?php else : ?>
+                        <?php if ( $event_time ) : ?>
+                            ➜ <?php echo esc_html( $event_time ); ?>
+                        <?php endif; ?>
+                        <?php if ( $special_theme ) : ?>
+                            <br><span class="cerrito-today-inline-theme"><?php echo esc_html( $special_theme ); ?></span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <?php
+    endforeach;
+}
+
+/**
+ * Full renderer: logo/description header, then location cards per event.
+ * Theme shown via the location card's inline cancel/note area.
+ *
+ * @param array  $groups
+ * @param array  $atts
+ * @param string $today_date  Y-m-d
+ */
+function cerrito_today_render_full( array $groups, array $atts, $today_date ) {
+    foreach ( $groups as $group ) :
+        $game_emoji       = cerrito_get_game_emoji( $group['type'] );
+        $game_logo        = ( $atts['show_game_logo']        === 'yes' ) ? cerrito_get_game_logo( $group['type'] )        : '';
+        $game_description = ( $atts['show_game_description'] === 'yes' ) ? cerrito_get_game_description( $group['type'] ) : '';
+        ?>
+        <div class="cerrito-today-occurrence">
+            <?php if ( $game_logo || $game_description ) : ?>
+                <div class="cerrito-game-header">
+                    <?php if ( $game_logo ) : ?>
+                        <div class="cerrito-game-logo">
+                            <img src="<?php echo esc_url( $game_logo ); ?>" alt="<?php echo esc_attr( $group['type'] ); ?>">
+                        </div>
+                    <?php endif; ?>
+                    <div class="cerrito-game-info">
+                        <?php cerrito_render_occurrence_title( $game_emoji, $group['type'], '' ); ?>
+                        <?php if ( $game_description ) : ?>
+                            <p class="cerrito-game-description"><?php echo esc_html( $game_description ); ?></p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php else : ?>
+                <?php cerrito_render_occurrence_title( $game_emoji, $group['type'], '' ); ?>
+            <?php endif; ?>
+
+            <?php foreach ( $group['events'] as $event ) :
+                cerrito_render_location_card( $event, $group['class'], $today_date );
+            endforeach; ?>
+        </div>
+        <?php
+    endforeach;
+}
