@@ -5,24 +5,19 @@
  * Combines recurring and upcoming one-time events, grouped by day of week.
  *
  * Parameters:
- *   location              string  Location slug or ID (auto-detected on single location pages)
- *   game_type             string  Filter by game type slug or name; comma-separated for multiple, e.g. "music-bingo,trivia"
+ *   location              string  Location slug or ID
+ *   game_type             string  Filter by game type slug or name; comma-separated for multiple
  *   days_ahead            int     How far ahead to show one-time events (default 30)
  *   show_game_logo        string  'yes'|'no'
  *   show_game_description string  'yes'|'no'
  *   display               string  'full' (default) | 'compact'
- *                                 compact = no venue cards; shows time -> venue name inline
- *   show_day_filter       string  'yes'|'no' -- show clickable day buttons above the schedule
- *   show_themed_filter    string  'yes'|'no' -- add a "Themed Events" toggle button
- *   default_day           string  Pre-select a day on load, e.g. "Tuesday" (requires show_day_filter="yes")
+ *   show_day_filter       string  'yes'|'no'
+ *   show_themed_filter    string  'yes'|'no'
+ *   default_day           string  Pre-select a day on load, e.g. "Tuesday"
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/**
- * @param array $atts
- * @return string
- */
 function cerrito_master_schedule_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'location'              => '',
@@ -33,7 +28,7 @@ function cerrito_master_schedule_shortcode( array $atts ) {
         'display'               => 'full',
         'show_day_filter'       => 'no',
         'show_themed_filter'    => 'no',
-        'default_day'           => '',   // e.g. "Tuesday" -- pre-selects that day on load
+        'default_day'           => '',
     ], $atts );
 
     if ( empty( $atts['location'] ) && is_singular( 'location' ) ) {
@@ -52,7 +47,7 @@ function cerrito_master_schedule_shortcode( array $atts ) {
     $show_filter        = ( $atts['show_day_filter']    === 'yes' );
     $show_themed_filter = ( $atts['show_themed_filter'] === 'yes' );
     $default_day = trim( $atts['default_day'] );
-    // Unique ID per shortcode instance so multiple on same page don't collide
+
     static $instance = 0;
     $instance++;
     $uid = 'cerrito-ms-' . $instance;
@@ -129,11 +124,9 @@ function cerrito_master_schedule_shortcode( array $atts ) {
     $wrapper_class = 'cerrito-master-schedule' . ( $display === 'compact' ? ' cerrito-master-schedule--compact' : '' );
     echo '<div id="' . esc_attr( $uid ) . '" class="' . esc_attr( $wrapper_class ) . '">';
 
-    // -- Filter bar ------------------------------------------------------------
     $any_filter = $show_filter || $show_themed_filter;
 
     if ( $any_filter ) {
-        // Only show day buttons for days that actually have events
         $days_with_events = array_filter( $day_order, function( $day ) use ( $events_by_day ) {
             return ! empty( $events_by_day[ $day ]['recurring'] ) || ! empty( $events_by_day[ $day ]['one_time'] );
         } );
@@ -197,7 +190,6 @@ function cerrito_master_schedule_shortcode( array $atts ) {
 
     echo '</div>'; // .cerrito-master-schedule
 
-    // -- Inline JS -- only emitted when any filter is active -------------------
     if ( $any_filter ) {
         $default_js = esc_js( $default_day );
         ?>
@@ -206,7 +198,6 @@ function cerrito_master_schedule_shortcode( array $atts ) {
             var wrap = document.getElementById('<?php echo esc_js( $uid ); ?>');
             if ( ! wrap ) return;
 
-            // State
             var activeDay    = '<?php echo $default_js; ?>' || 'all';
             var themedOnly   = false;
 
@@ -216,7 +207,6 @@ function cerrito_master_schedule_shortcode( array $atts ) {
 
             function applyFilters() {
                 dayDivs.forEach( function( dayDiv ) {
-                    // Step 1: does this day pass the day filter?
                     var dayMatch = ( activeDay === 'all' || dayDiv.dataset.day === activeDay );
 
                     if ( ! dayMatch ) {
@@ -224,7 +214,6 @@ function cerrito_master_schedule_shortcode( array $atts ) {
                         return;
                     }
 
-                    // Step 2: if themed filter is on, show/hide individual groups
                     var groups = dayDiv.querySelectorAll('.cerrito-event-group');
 
                     if ( themedOnly ) {
@@ -234,7 +223,6 @@ function cerrito_master_schedule_shortcode( array $atts ) {
                             g.style.display = show ? '' : 'none';
                             if ( show ) visibleGroups++;
                         });
-                        // Hide the whole day block if no themed groups remain
                         dayDiv.style.display = visibleGroups > 0 ? '' : 'none';
                     } else {
                         groups.forEach( function( g ) { g.style.display = ''; });
@@ -243,7 +231,6 @@ function cerrito_master_schedule_shortcode( array $atts ) {
                 });
             }
 
-            // Day buttons
             dayBtns.forEach( function( btn ) {
                 btn.addEventListener( 'click', function() {
                     activeDay = this.dataset.day;
@@ -254,7 +241,6 @@ function cerrito_master_schedule_shortcode( array $atts ) {
                 });
             });
 
-            // Themed toggle button
             if ( themedBtn ) {
                 themedBtn.addEventListener( 'click', function() {
                     themedOnly = ! themedOnly;
@@ -263,7 +249,6 @@ function cerrito_master_schedule_shortcode( array $atts ) {
                 });
             }
 
-            // Apply initial state
             applyFilters();
             if ( activeDay !== 'all' ) {
                 dayBtns.forEach( function( b ) {

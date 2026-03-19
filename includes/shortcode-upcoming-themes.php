@@ -1,21 +1,10 @@
 <?php
 /**
  * Shortcode: [cerrito_upcoming_themes_list]
- *
- * Displays a formatted list of upcoming themed dates pulled from the
- * game_type 'themed_dates' term meta, grouped and sorted by date.
- *
- * Parameters:
- *   days_ahead  int     How far ahead to look (default 90)
- *   game_type   string  Filter by game type slug
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/**
- * @param array $atts
- * @return string
- */
 function cerrito_upcoming_themes_list_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'days_ahead' => '90',
@@ -28,14 +17,12 @@ function cerrito_upcoming_themes_list_shortcode( array $atts ) {
     $today    = wp_date( 'Y-m-d' );
     $end_date = wp_date( 'Y-m-d', strtotime( '+' . (int) $atts['days_ahead'] . ' days' ) );
 
-    // Fetch relevant game types
     $terms_args = [ 'taxonomy' => 'game_type', 'hide_empty' => false ];
     if ( ! empty( $atts['game_type'] ) ) {
         $terms_args['slug'] = $atts['game_type'];
     }
     $game_types = get_terms( $terms_args );
 
-    // Build a flat list of themed date entries with their theme term attached
     $themed_list = [];
 
     foreach ( $game_types as $game_type ) {
@@ -61,7 +48,6 @@ function cerrito_upcoming_themes_list_shortcode( array $atts ) {
         }
     }
 
-    // Sort ascending by date
     usort( $themed_list, function( $a, $b ) { return strcmp( $a['date'], $b['date'] ); } );
 
     echo '<div class="cerrito-themes-list">';
@@ -75,7 +61,6 @@ function cerrito_upcoming_themes_list_shortcode( array $atts ) {
             $theme       = $item['theme'];
             $theme_emoji = (string) get_field( 'theme_emoji', 'game-theme_' . $theme->term_id );
 
-            // Gather locations + times for all game types on this date
             $locations_times = cerrito_get_locations_for_themed_date( $item, $date_obj );
             ?>
             <div class="cerrito-themes-list-item">
@@ -122,14 +107,6 @@ function cerrito_upcoming_themes_list_shortcode( array $atts ) {
 }
 add_shortcode( 'cerrito_upcoming_themes_list', 'cerrito_upcoming_themes_list_shortcode' );
 
-/**
- * For a themed-date list item, find all events/locations that occur on that date
- * for the associated game types. Returns array of [ name, url, time ] arrays.
- *
- * @param array    $item
- * @param DateTime $date_obj
- * @return array
- */
 function cerrito_get_locations_for_themed_date( array $item, $date_obj ) {
     $locations = [];
     $date_str  = $date_obj->format( 'Y-m-d' );

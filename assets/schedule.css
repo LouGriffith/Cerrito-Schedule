@@ -1,6 +1,6 @@
 /* =============================================================================
    Cerrito Schedule — schedule.css
-   Version: 6.5
+   Version: 6.16.0
    All shortcode styles in one file, loaded once via wp_enqueue_style().
    ============================================================================= */
 
@@ -184,7 +184,6 @@
 
 .cerrito-date-section { margin-bottom: 40px; }
 
-/* Slim event card used in the basic schedule (no logo column) */
 .cerrito-event {
     background: #fff;
     border-left: 4px solid #0066cc;
@@ -244,7 +243,7 @@
     color: #fff;
     padding: 15px 20px;
     border-radius: 8px;
-    margin-bottom: 30px;
+    margin-bottom: 10px; /* v6.16.0: reduced from 30px */
     text-align: center;
 }
 
@@ -287,6 +286,15 @@
 
 .cerrito-compact-venue a { color: #333; text-decoration: none; font-weight: 500; }
 .cerrito-compact-venue a:hover { color: #0066cc; }
+
+/* Inline theme label beneath venue row in [cerrito_today] compact ─────────── */
+.cerrito-today-inline-theme {
+    display: inline-block;
+    font-size: 0.85em;
+    font-style: italic;
+    color: #e91e63;
+    padding-left: 2px;
+}
 
 /* ── [cerrito_themed_rounds] ────────────────────────────────────────────────── */
 
@@ -436,7 +444,6 @@
     border-color: #333;
 }
 
-/* "Themed Events" toggle — uses pink accent when active to match theme colour */
 .cerrito-day-filter__btn--themed {
     border-color: #e91e63;
     color: #e91e63;
@@ -449,7 +456,6 @@
     border-color: #e91e63;
 }
 
-/* Vertical separator between day pills and the themed button */
 .cerrito-day-filter__sep {
     display: inline-block;
     width: 1px;
@@ -459,7 +465,6 @@
     margin: 0 4px;
 }
 
-/* Optional label e.g. "Day:" */
 .cerrito-day-filter__label {
     font-size: 0.8em;
     font-weight: 600;
@@ -488,7 +493,6 @@
     padding-bottom: 0;
 }
 
-/* Header: logo left, info right */
 .cerrito-location-entry__header {
     display: flex;
     align-items: flex-start;
@@ -552,7 +556,6 @@
     line-height: 1.5;
 }
 
-/* Events section */
 .cerrito-location-entry__events {
     padding-left: 0;
 }
@@ -570,7 +573,6 @@
     margin-top: 0;
 }
 
-/* Individual event row: type left, time(s) right */
 .cerrito-location-entry__event-row {
     display: flex;
     align-items: baseline;
@@ -612,7 +614,6 @@
     white-space: nowrap;
 }
 
-/* Multiple times separated by a faint dot */
 .cerrito-location-entry__time + .cerrito-location-entry__time::before {
     content: '·';
     margin-right: 8px;
@@ -672,11 +673,8 @@
 
 /* =============================================================================
    COMPACT DISPLAY MODE  (display="compact")
-   Applies to [cerrito_master_schedule] and [cerrito_recurring_schedule].
-   Strips venue logo cards; shows each occurrence as a tight type-label + rows.
    ============================================================================= */
 
-/* Tighten day-level spacing in compact mode */
 .cerrito-master-schedule--compact .cerrito-master-day,
 .cerrito-recurring-schedule--compact .cerrito-recurring-day {
     margin-bottom: 30px;
@@ -687,12 +685,10 @@
     margin-bottom: 16px;
 }
 
-/* Compact group wrapper */
 .cerrito-event-group--compact {
     margin-bottom: 14px;
 }
 
-/* Game type label row */
 .cerrito-compact-type {
     font-weight: 700;
     font-size: 1em;
@@ -707,11 +703,9 @@
     margin-right: 6px;
 }
 
-/* Color accents on the type label */
 .cerrito-compact-type.trivia { color: #c0392b; }
 .cerrito-compact-type.bingo  { color: #16a085; }
 
-/* Individual venue row: time → venue */
 .cerrito-compact-row {
     display: flex;
     align-items: baseline;
@@ -733,7 +727,6 @@
     display: none;
 }
 
-/* Venue name — left side */
 .cerrito-compact-row .cerrito-compact-venue {
     flex: 1;
     text-align: left;
@@ -751,7 +744,6 @@
     text-decoration: underline;
 }
 
-/* Cancelled occurrence — struck-through venue, muted time, reason note */
 .cerrito-compact-row--cancelled {
     opacity: 0.6;
 }
@@ -774,7 +766,6 @@
     text-decoration: none;
 }
 
-/* Cancel reason in full location cards */
 .cerrito-cancel-reason {
     display: inline;
     font-size: 0.85em;
@@ -792,7 +783,6 @@
     color: #888;
 }
 
-/* Theme / date badges inside compact type label */
 .cerrito-compact-type .cerrito-theme-badge {
     font-weight: 400;
     font-size: 0.9em;
@@ -804,7 +794,6 @@
     color: #0066cc;
 }
 
-/* Responsive: full-width on small screens */
 @media (max-width: 480px) {
     .cerrito-compact-row {
         flex-wrap: wrap;
@@ -815,21 +804,18 @@
         text-align: left;
     }
 }
-/* ── [cerrito_game_type_schedule] ────────────────────────────────────────────
-   Paste these rules into assets/schedule.css
-   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── [cerrito_game_type_schedule] ────────────────────────────────────────────── */
 
 .cerrito-gt-schedule {
     max-width: 800px;
     margin: 0 auto;
 }
 
-/* One block per game type */
 .cerrito-gt-block {
     margin-bottom: 40px;
 }
 
-/* Colored header bar matching event type */
 .cerrito-gt-header {
     display: flex;
     align-items: center;
@@ -864,7 +850,6 @@
     line-height: 1.5;
 }
 
-/* "Every Monday" / "Mar 21 (Friday)" labels */
 .cerrito-gt-day-label {
     font-size: 0.8em;
     font-weight: 700;
@@ -876,7 +861,6 @@
     border-bottom: 1px solid #eee;
 }
 
-/* Individual location row */
 .cerrito-gt-row {
     display: flex;
     align-items: center;
@@ -907,5 +891,3 @@
     white-space: nowrap;
     margin-left: auto;
 }
-
-/* Reuse existing .cerrito-theme-badge for inline theme label */

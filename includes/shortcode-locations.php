@@ -4,25 +4,19 @@
  *
  * Displays all locations as a directory. Under each location every scheduled
  * event is listed (recurring by day-of-week, upcoming one-time events by date).
- * Locations with no events still appear with a "no events" message.
  *
  * Parameters:
  *   game_type      string   Filter events by game type slug or name
- *   show_address   string   'yes'|'no'  -- show address line (default yes)
- *   show_specials  string   'yes'|'no'  -- show specials/offers text (default yes)
- *   show_logo      string   'yes'|'no'  -- show location logo (default yes)
+ *   show_address   string   'yes'|'no'  (default yes)
+ *   show_specials  string   'yes'|'no'  (default yes)
+ *   show_logo      string   'yes'|'no'  (default yes)
  *   days_ahead     int      How far ahead to look for one-time events (default 60)
  *   orderby        string   'name' (default) | 'menu_order'
  *   empty_message  string   Text shown when a location has no events
- *                           (default "No events currently scheduled.")
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/**
- * @param array $atts
- * @return string
- */
 function cerrito_locations_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'game_type'     => '',
@@ -42,7 +36,6 @@ function cerrito_locations_shortcode( array $atts ) {
     $end_date   = wp_date( 'Y-m-d', strtotime( "+{$days_ahead} days" ) );
     $day_order  = [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ];
 
-    // -- Fetch all locations ---------------------------------------------------
     $location_query_args = [
         'post_type'      => 'location',
         'posts_per_page' => -1,
@@ -53,14 +46,12 @@ function cerrito_locations_shortcode( array $atts ) {
         $location_query_args['orderby'] = 'menu_order';
         $location_query_args['order']   = 'ASC';
     } else {
-        // Fetch alphabetically, then re-sort in PHP: letters A-Z first, numbers after
         $location_query_args['orderby'] = 'title';
         $location_query_args['order']   = 'ASC';
     }
 
     $locations = get_posts( $location_query_args );
 
-    // Re-sort: A-Z first, then 0-9 (WordPress default puts numbers before letters)
     if ( $atts['orderby'] !== 'menu_order' ) {
         usort( $locations, function( $a, $b ) {
             $ta          = $a->post_title;
@@ -78,7 +69,6 @@ function cerrito_locations_shortcode( array $atts ) {
         return ob_get_clean();
     }
 
-    // -- Fetch all events once, then index by location ID ----------------------
     $all_events = get_posts( [
         'post_type'      => 'event',
         'posts_per_page' => -1,
@@ -89,8 +79,7 @@ function cerrito_locations_shortcode( array $atts ) {
         $all_events = cerrito_filter_by_game_type( $all_events, $atts['game_type'] );
     }
 
-    // Index events by location ID for fast lookup
-    $events_by_location = [];   // [ location_id => [ WP_Post, ... ] ]
+    $events_by_location = [];
 
     foreach ( $all_events as $event ) {
         $loc = cerrito_resolve_location( get_field( 'event_location', $event->ID ) );
@@ -98,20 +87,19 @@ function cerrito_locations_shortcode( array $atts ) {
         $events_by_location[ $loc->ID ][] = $event;
     }
 
-    // -- Render ----------------------------------------------------------------
     echo '<div class="cerrito-locations">';
 
     foreach ( $locations as $location ) {
         $loc_id      = $location->ID;
-        $logo        = ( $atts['show_logo'] === 'yes' ) ? cerrito_get_location_logo( $loc_id ) : '';
+        $logo        = ( $atts['show_logo']     === 'yes' ) ? cerrito_get_location_logo( $loc_id )    : '';
         $address     = ( $atts['show_address']  === 'yes' ) ? cerrito_get_location_address( $loc_id ) : '';
-        $specials    = ( $atts['show_specials'] === 'yes' ) ? get_field( 'specials', $loc_id ) : '';
+        $specials    = ( $atts['show_specials'] === 'yes' ) ? get_field( 'specials', $loc_id )        : '';
         $website     = get_field( 'website', $loc_id );
         $loc_events  = $events_by_location[ $loc_id ] ?? [];
 
         echo '<div class="cerrito-location-entry">';
 
-        // -- Location header ---------------------------------------------------
+        // Header
         echo '<div class="cerrito-location-entry__header">';
 
         if ( $logo ) {
@@ -145,15 +133,14 @@ function cerrito_locations_shortcode( array $atts ) {
         echo '</div>'; // __info
         echo '</div>'; // __header
 
-        // -- Events for this location ------------------------------------------
+        // Events
         echo '<div class="cerrito-location-entry__events">';
 
         if ( empty( $loc_events ) ) {
             echo '<p class="cerrito-location-entry__empty">' . esc_html( $atts['empty_message'] ) . '</p>';
         } else {
-            // Split into recurring (grouped by day) and upcoming one-time
-            $by_day   = [];   // [ 'Monday' => [ group_key => group ], ... ]
-            $upcoming = [];   // [ date => [ group_key => group ] ]
+            $by_day   = [];
+            $upcoming = [];
 
             foreach ( $loc_events as $event ) {
                 $is_recurring = (bool) get_field( 'is_recurring', $event->ID );
@@ -161,7 +148,6 @@ function cerrito_locations_shortcode( array $atts ) {
                 $event_date   = cerrito_normalise_date( get_field( 'event_date', $event->ID ) );
                 $theme        = get_field( 'special_theme', $event->ID );
 
-                // Auto-resolve theme
                 if ( empty( $theme ) ) {
                     $types = get_the_terms( $event->ID, 'game_type' );
                     if ( $types && ! is_wp_error( $types ) ) {
@@ -209,7 +195,6 @@ function cerrito_locations_shortcode( array $atts ) {
                 }
             }
 
-            // Render recurring events
             $has_recurring = false;
             foreach ( $day_order as $day ) {
                 if ( empty( $by_day[ $day ] ) ) continue;
@@ -223,7 +208,6 @@ function cerrito_locations_shortcode( array $atts ) {
                 }
             }
 
-            // Recurring events with no day assigned yet
             if ( ! empty( $by_day['__none__'] ) ) {
                 echo '<div class="cerrito-location-entry__day-label">Coming Soon</div>';
                 foreach ( $by_day['__none__'] as $group ) {
@@ -232,7 +216,6 @@ function cerrito_locations_shortcode( array $atts ) {
                 }
             }
 
-            // Render upcoming one-time events
             if ( ! empty( $upcoming ) ) {
                 ksort( $upcoming );
                 foreach ( $upcoming as $date => $groups ) {
@@ -249,7 +232,6 @@ function cerrito_locations_shortcode( array $atts ) {
             }
 
             if ( ! $has_recurring && empty( $upcoming ) && empty( $by_day['__none__'] ) ) {
-                // All events for this location fell outside the date window
                 echo '<p class="cerrito-location-entry__empty">' . esc_html( $atts['empty_message'] ) . '</p>';
             }
         }
@@ -263,14 +245,6 @@ function cerrito_locations_shortcode( array $atts ) {
 }
 add_shortcode( 'cerrito_locations', 'cerrito_locations_shortcode' );
 
-/**
- * Render a single event row inside the location directory view.
- * Shows: emoji  game-type  [theme]  --  time(s)
- *
- * @param array $group       Keys: type, theme, class, events
- * @param bool  $coming_soon Replace time with "TBA"
- * @return string
- */
 function cerrito_render_location_event_row( array $group, $coming_soon = false ) {
     ob_start();
 

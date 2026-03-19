@@ -6,19 +6,15 @@
  * listed beneath it -- both recurring (by day) and upcoming one-time events.
  *
  * Parameters:
- *   game_type   string  Limit to a single game type slug or name (optional)
- *   days_ahead  int     How far ahead to include one-time events (default 60)
- *   show_logo   string  'yes'|'no'  -- show game type logo above name (default 'no')
- *   show_description string 'yes'|'no' -- show game type description (default 'no')
- *   orderby     string  'name' (default) | 'menu_order' -- order game types
+ *   game_type        string  Limit to a single game type slug or name (optional)
+ *   days_ahead       int     How far ahead to include one-time events (default 60)
+ *   show_logo        string  'yes'|'no'  (default 'no')
+ *   show_description string  'yes'|'no'  (default 'no')
+ *   orderby          string  'name' (default) | 'menu_order'
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/**
- * @param array $atts
- * @return string
- */
 function cerrito_game_type_schedule_shortcode( array $atts ) {
     $atts = shortcode_atts( [
         'game_type'        => '',
@@ -36,14 +32,12 @@ function cerrito_game_type_schedule_shortcode( array $atts ) {
     $end_date   = wp_date( 'Y-m-d', strtotime( "+{$days_ahead} days" ) );
     $day_order  = [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday' ];
 
-    // ── Fetch game type terms ─────────────────────────────────────────────────
     $terms_args = [
         'taxonomy'   => 'game_type',
         'hide_empty' => true,
     ];
 
     if ( ! empty( $atts['game_type'] ) ) {
-        // Accept slug or name
         $terms_args['slug'] = sanitize_title( $atts['game_type'] );
     }
 
@@ -61,15 +55,12 @@ function cerrito_game_type_schedule_shortcode( array $atts ) {
         return ob_get_clean();
     }
 
-    // ── Fetch all events once ─────────────────────────────────────────────────
     $all_events = get_posts( [
         'post_type'      => 'event',
         'posts_per_page' => -1,
         'post_status'    => 'publish',
     ] );
 
-    // Index by game_type term_id for fast lookup
-    // [ term_id => [ WP_Post, ... ] ]
     $events_by_type = [];
 
     foreach ( $all_events as $event ) {
@@ -80,7 +71,6 @@ function cerrito_game_type_schedule_shortcode( array $atts ) {
         }
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
     echo '<div class="cerrito-gt-schedule">';
 
     foreach ( $game_types as $term ) {
@@ -94,9 +84,8 @@ function cerrito_game_type_schedule_shortcode( array $atts ) {
 
         if ( empty( $term_events ) ) continue;
 
-        // Separate into recurring (keyed by day) and upcoming one-time events
-        $recurring_by_day = [];  // [ 'Monday' => [ WP_Post, ... ], ... ]
-        $upcoming         = [];  // [ 'Y-m-d'  => [ WP_Post, ... ], ... ]
+        $recurring_by_day = [];
+        $upcoming         = [];
 
         foreach ( $term_events as $event ) {
             $is_recurring = (bool) get_field( 'is_recurring', $event->ID );
@@ -116,10 +105,8 @@ function cerrito_game_type_schedule_shortcode( array $atts ) {
             }
         }
 
-        // Skip the block entirely if there's nothing to show
         if ( empty( $recurring_by_day ) && empty( $upcoming ) ) continue;
 
-        // ── Game type header ──────────────────────────────────────────────────
         echo '<div class="cerrito-gt-block ' . esc_attr( $event_class ) . '">';
 
         echo '<div class="cerrito-gt-header cerrito-gt-header--' . esc_attr( $event_class ) . '">';
@@ -140,7 +127,6 @@ function cerrito_game_type_schedule_shortcode( array $atts ) {
 
         echo '<div class="cerrito-gt-rows">';
 
-        // ── Recurring rows (canonical day order) ──────────────────────────────
         foreach ( $day_order as $day ) {
             if ( empty( $recurring_by_day[ $day ] ) ) continue;
 
@@ -167,7 +153,6 @@ function cerrito_game_type_schedule_shortcode( array $atts ) {
             }
         }
 
-        // ── Upcoming one-time rows ─────────────────────────────────────────────
         if ( ! empty( $upcoming ) ) {
             ksort( $upcoming );
 
